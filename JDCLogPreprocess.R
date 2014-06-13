@@ -1,3 +1,5 @@
+library(jsonlite)
+
 # mergeSplitLogFiles - Merge/Split log files
 # This function takes log files in JSON, loads them in R data frames, takes those times within a certain limit, and splits the tags 
 # present into one observation each, including the x/y position of the center of the tag
@@ -12,22 +14,36 @@ mergeSplitLogFiles <- function(directory, startTime, endTime, label){
   setwd(directory)
   
   # We loop through all the .log files in the directory
-  logFiles <- list.files(pattern = "\\.log$")
+  logFiles <- list.files(pattern = "\\.json$")
   
   for(file in logFiles){
     # We import the JSON file
     jsonData <- fromJSON(file)
     
-    # We turn the timestamp into a date/time object in R
+    # We turn the start/end times to milliseconds and compare with the timestamp of each entry
+    startTimestamp <- as.numeric(startTime)*1000
+    endTimestamp <- as.numeric(endTime)*1000
+    
+    # We get which entries are valid (within the time limits)
+    validEntries <- !is.na(jsonData$timestamp[jsonData$timestamp >= startTimestamp && jsonData$timestamp <= endTimestamp])
+    
+    # if there are no valid entries, we go to the next logfile
+    if(sum(validEntries)==0) next
+    
+    # We iterate throughout the log entries
+    #for(i in 1:)
     
     # We check whether the time is within the frontiers
+    # if(timestamp >= startTimestamp && timestamp <= endTimestamp){
+      # We split the tags and calculate the center of each tag, and create a separate row for each
+      
+      # Optionally, we can add further data about what each tag means (what kind of representation it is, what quadrant the position is it in)
     
-    # We split the tags and calculate the center of each tag, and create a separate row for each
+    #}
     
-    # Optionally, we can add further data about what each tag means (what kind of representation it is, what quadrant the position is it in)
   }
   
-  # serialize() the clean objects into a binary R file, and also into xlsx?
+  # serialize() the clean object into a binary R file, and also into xlsx?
   
   # Go back to the original current dir
   setwd(originalDir)
@@ -36,16 +52,29 @@ mergeSplitLogFiles <- function(directory, startTime, endTime, label){
 # cleanAndOrganizeJDCLogs - Clean and organize
 # This function takes log files in JSON, loads them in R data frames, and splits them and exports them into binary files
 # Parameters: rootDir the directory in which the logs to be merged/split are, in folders called "lamp 1", "lamp 2"...
-cleanAndOrganizeJDCLogs <- function(rootDir){
+preprocessJDCLogs <- function(rootDir){
   
-  # Session B Lamp 1
+  cat ("Please ensure that all .log files have ending braces so that they are valid pseudo-yaml, and save them as .yaml files. Then press [enter] to continue")
+  line <- readline()
+  
+  # Convert the .yaml files to JSON .json files
+  convertLogsToJson(paste(rootDir, "lamp 1", sep="/"))
+  convertLogsToJson(paste(rootDir, "lamp 2", sep="/"))
+  convertLogsToJson(paste(rootDir, "lamp 3", sep="/"))
+  convertLogsToJson(paste(rootDir, "lamp 4", sep="/"))
+  convertLogsToJson(paste(rootDir, "lamp 5", sep="/"))
+  
+  
+  
+  # Session 2 Lamp 1
+  
   
   # We calculate the time limits (for now, based on the expected time slots)
   start <- as.POSIXct(strptime("2014-06-05 10:15:00", "%Y-%m-%d %H:%M:%S"))
   end <- as.POSIXct(strptime("2014-06-05 11:15:00", "%Y-%m-%d %H:%M:%S"))
   
   # We process the data
-  mergeSplitLogFiles(paste(rootDir, "lamp 1", sep="/"),start,end,"B1")
+  #mergeSplitLogFiles(paste(rootDir, "lamp 1", sep="/"),start,end,"S2G1")
 
 
   
@@ -53,6 +82,28 @@ cleanAndOrganizeJDCLogs <- function(rootDir){
   
   
 }
+
+convertLogsToJson <- function(rootDir){
+
+  # Store the current dir, to come back to it at the end, and change wd to the rootDir
+  originalDir <- getwd()
+  setwd(rootDir)
+  
+  cat(paste("Starting pseudo-YAML to JSON conversion of directory",rootDir))
+
+  logFiles <- list.files(pattern = "\\.yaml$")
+  
+  for(logFile in logFiles){
+    cat(paste("Converting ",logFile,"..."))
+    convertLogToJson(logFile)
+  }
+  
+  cat("Conversion to json finished!")
+  
+  # Go back to the original current dir
+  setwd(originalDir)
+}
+
 
 # convertLogToJson - convert pseudo-yaml log file to JSON for later parsing
 convertLogToJson <- function(inputFile){
