@@ -136,15 +136,22 @@ mergeSplitLogFiles <- function(directory, startTime, endTime, label){
   
   #We convert the character fields to factors
   #totalData[sapply(totalData, is.character)] <- lapply(totalData[sapply(totalData, is.character)], as.factor)
-  for(i in 2:length(totalData)) totalData[i][[1]] <- factor(totalData[i][[1]],levels=c("0","Q1","Q2","Q3","Q4"))
-  
-  cat (paste("Finished processing for group ",label,". Writing to file\n"))
-       
-  # Go back to the original current dir
-  setwd(originalDir)
+  if(length(totalData$timestamp)!=0){
+    for(i in 2:length(totalData)) totalData[i][[1]] <- factor(totalData[i][[1]],levels=c("0","Q1","Q2","Q3","Q4"))
+    
+    cat (paste("Finished processing for group ",label,". Writing",as.character(length(totalData$timestamp)),"cleaned log entries to file\n"))
+    # Go back to the original current dir
+    setwd(originalDir)
+    
+    # serialize() the clean object into a binary R file, and also into xlsx?
+    save(totalData,file=paste(label,".rda",sep=""),compress=TRUE)
+  }else{
+    # Go back to the original current dir
+    setwd(originalDir)
 
-  # serialize() the clean object into a binary R file, and also into xlsx?
-  save(totalData,file=paste(label,".rda",sep=""),compress=TRUE)
+    cat (paste("Finished processing for group ",label,". No log entries to write!\n"))
+  }
+       
   
 }
 
@@ -248,7 +255,7 @@ getQuadrantFromPosition <- function(pos,width,height){
 # preprocessJDCLogs - Clean and organize
 # This is the overall function in charge of the preprocessing and cleaning of the log data from the JDC experiment
 # Parameters: rootDir the directory in which the logs to be merged/split are, in folders called "lamp 1", "lamp 2"...
-preprocessJDCLogs <- function(rootDir,doYAMLConversion=false){
+preprocessJDCLogs <- function(rootDir,doYAMLConversion=FALSE){
   
   cat ("Please ensure that all .log files have ending parentheses so that they are valid pseudo-yaml, and save them as .yaml files. Then press [enter] to continue")
   line <- readline()
@@ -263,21 +270,32 @@ preprocessJDCLogs <- function(rootDir,doYAMLConversion=false){
   }
   
   
-  # Session 2 Lamp 1
-  
-  
-  # We calculate the time limits (for now, based on the expected time slots)
+  # We import the groups, start and end times from a csv in the rootDir
+  syncData <- read.csv(paste(rootDir,"ActivityTiming-synchronization.csv", sep="/"), stringsAsFactors=FALSE)
+
   options(digits.secs = 3)
-  start <- as.POSIXct(strptime("2014-06-05 10:20:56.685", "%Y-%m-%d %H:%M:%OS"))
-  end <- as.POSIXct(strptime("2014-06-05 10:52:22.101", "%Y-%m-%d %H:%M:%OS"))
-  
-  # We process the data
-  mergeSplitLogFiles(paste(rootDir, "lamp 1", sep="/"),start,end,"S2G1")
 
+  # for each group, we get and clean the data
+  for(i in 1:length(syncData$Code)){
+    # We calculate the time limits (for now, based on the expected time slots)
+    start <- as.POSIXct(strptime(syncData$RealStart[i], "%Y-%m-%d %H:%M:%OS"))
+    end <- as.POSIXct(strptime(syncData$RealEnd[i], "%Y-%m-%d %H:%M:%OS"))
+    mergeSplitLogFiles(paste(rootDir, paste("lamp ",as.character(syncData$Lamp..[i]),sep=""), sep="/"),start,end,syncData$Code[i])
+  }
+  
+  #We merge manually the two composite group data, and write it to a file again
+  cat ("Doing manual join of groups fragmented across lamps\n")
+  s2g3a <- get(load('S2G3a.rda')) 
+  s2g3b <- get(load('S2G3b.rda'))
+  totalData <- rbind(s2g3a,s2g3b) 
+  save(totalData,file="S2G3.rda",compress=TRUE)
 
+  # s2g4a <- get(load('S2G4a.rda')) # From this part, we lost the logs!
+  totalData <- get(load('S2G4b.rda'))
+  # totalData <- rbind(s2g4a,s2g4b) 
+  save(totalData,file="S2G4.rda",compress=TRUE)
   
-  
-  
+  cat ("Process finished! Check your .rda files")
   
 }
 
