@@ -32,4 +32,16 @@ var <- get(load('filename.rda'))
 
 # Exploratory analysis
 
-TBD
+These functions generate some basic descriptive graphics about the log data, just run the function:
+
+```
+JDCExplorations()
+```
+
+This will generate a number of graphic files:
+
+* `*.logpoints.png`: Available log samples (per group) - to see about performance, crashes, missing log data etc
+* `*.manipulative.presence.png`: Relative usage of the different kinds of manipulatives (during how many samples was the kind of manipulative present in the table)
+* `*.help.presence.png`: Relative usage of the different kinds of hint cards (during how many samples was the kind of manipulative present in the table)
+
+
