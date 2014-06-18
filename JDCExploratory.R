@@ -21,6 +21,7 @@ logPointsInTime <- function(rootDir,datafile){
   png(paste(datafile,".logpoints.png",sep=""))
   breaks <- seq((min(data$timestamp)-60001),(max(data$timestamp)+60001),by=60000)
   hist(data$timestamp,breaks,main=paste("Number of available log samples per minute - Group",datafile))
+  rug(data$timestamp)
   dev.off()
   
 }
