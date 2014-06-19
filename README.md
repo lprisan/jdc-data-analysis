@@ -40,8 +40,12 @@ JDCExplorations()
 
 This will generate a number of graphic files:
 
+Per group:
 * `*.logpoints.png`: Available log samples (per group) - to see about performance, crashes, missing log data etc
 * `*.manipulative.presence.png`: Relative usage of the different kinds of manipulatives (during how many samples was the kind of manipulative present in the table)
 * `*.help.presence.png`: Relative usage of the different kinds of hint cards (during how many samples was the kind of manipulative present in the table)
 
+Per session:
+* `*.hint.usage.png`: temporal sequence of the usage of the different hint types, for each of the groups in a session
+* `*.manip.usage.png`: temporal sequence of the usage of the different kinds of manipulatives, for each of the groups in a session
 

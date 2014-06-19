@@ -1,16 +1,107 @@
+library("lattice")
+library("ggplot2")
+
 # This is the global function that runs the whole set of exploratory data analyses
 JDCExplorations <- function(){
   
   setwd("/home/lprisan/workspace/jdc-data-analysis/logs")
   
-  # Do the 
+  # Do the samples available, relative usage of representations and helps per group
   for(file in list.files(pattern = "\\.rda$")){
     logPointsInTime(getwd(),file)
     logSamplesElementsPresent(getwd(),file)
   }
   
+  # Do a multi-graph panel for the temporal evolution of usage of each kind of card and each group, for a session
+  logManipulativeGroupUsageInSession(getwd())
+  logHelpGroupUsageInSession(getwd())
+  #logMapUsageInSession(getwd(),list.files(pattern = "\\.rda$"))
   
 }
+
+# Do a multi-graph panel of usage of each kind of manipulative
+logManipulativeGroupUsageInSession <- function(rootDir){
+  
+  setwd(rootDir)
+  
+  files <- list.files(pattern = "\\.rda$")
+  
+  #We get the files for each session
+  for(i in 1:6){
+    sessionFiles <- files[grep(paste("S",as.character(i),sep=""),files,fixed=TRUE)]
+    
+    sessionData <- data.frame()
+    
+    # We get all the group data for the session and add it to a overall dataframe
+    for(file in sessionFiles){
+      data <- get(load(file))
+      data <- addElementUsageVariables(data)
+      data$Group <- rep(substr(file,3,4),times=length(data$timestamp))
+      sessionData <- rbind(sessionData,data)
+    }
+    
+    # Do the graph
+    png(paste(paste("S",as.character(i),sep=""),".manip.usage.png",sep=""),width=1280,height=1024)  
+    par(mfcol=c(3,length(sessionFiles)))
+    for(j in 1:length(sessionFiles)){
+      groupName <- substr(sessionFiles[j],3,4)
+      with(subset(sessionData, Group==groupName),{
+       plot(timestamp,UsingCont,main=groupName)
+       plot(timestamp,UsingDisc,main=groupName)
+       plot(timestamp,UsingFrac,main=groupName)
+     }) 
+    }
+    dev.off()
+    
+  }
+  
+  
+  
+}
+
+
+# Do a multi-graph panel of usage of each kind of hint card
+logHelpGroupUsageInSession <- function(rootDir){
+  
+  setwd(rootDir)
+  
+  files <- list.files(pattern = "\\.rda$")
+  
+  #We get the files for each session
+  for(i in 1:6){
+    sessionFiles <- files[grep(paste("S",as.character(i),sep=""),files,fixed=TRUE)]
+    
+    sessionData <- data.frame()
+    
+    # We get all the group data for the session and add it to a overall dataframe
+    for(file in sessionFiles){
+      data <- get(load(file))
+      data <- addElementUsageVariables(data)
+      data$Group <- rep(substr(file,3,4),times=length(data$timestamp))
+      sessionData <- rbind(sessionData,data)
+    }
+    
+    # Do the graph
+    png(paste(paste("S",as.character(i),sep=""),".hint.usage.png",sep=""),width=1280,height=1024)  
+    par(mfcol=c(5,length(sessionFiles)))
+    for(j in 1:length(sessionFiles)){
+      groupName <- substr(sessionFiles[j],3,4)
+      with(subset(sessionData, Group==groupName),{
+        plot(timestamp,HelpContCirc,main=groupName)
+        plot(timestamp,HelpContRect,main=groupName)
+        plot(timestamp,HelpDiscrete,main=groupName)
+        plot(timestamp,HelpDecimal,main=groupName)
+        plot(timestamp,HelpFraction,main=groupName)
+      }) 
+    }
+    dev.off()
+    
+  }
+  
+  
+  
+}
+
 
 # Make graphics with the points in time (e.g., samples available per minute), in order 
 # to see the lamps performance, crashes and gaps in our data
@@ -26,11 +117,8 @@ logPointsInTime <- function(rootDir,datafile){
   
 }
 
-# Make graphics with the time a kind of representation was on the table, for a group
-logSamplesElementsPresent <- function(rootDir,datafile){
-  
-  setwd(rootDir)
-  data <- get(load(datafile))
+# Adds some basic usage variables (is a certain kind of element present? boolean) to a data frame
+addElementUsageVariables <- function(data){
   
   # Representation usage (number of samples in which a representation is present)
   data$UsingCont <- (data$C1!="0" | data$C2!="0" | data$R1!="0" | data$R2!="0")
@@ -47,6 +135,18 @@ logSamplesElementsPresent <- function(rootDir,datafile){
   data$HelpDiscrete <- (data$DiscreteHint!="0")
   data$HelpDecimal <- (data$DecimalHint!="0")
   data$HelpFraction <- (data$FractionHint!="0")
+  
+  return(data)
+}
+
+# Make graphics with the time a kind of representation was on the table, for a group
+logSamplesElementsPresent <- function(rootDir,datafile){
+  
+  setwd(rootDir)
+  data <- get(load(datafile))
+  
+  data <- addElementUsageVariables(data)
+  
   
   # We sum the number of samples in which each group is present
   barmanip <- apply(data[66:68],2,sum)
