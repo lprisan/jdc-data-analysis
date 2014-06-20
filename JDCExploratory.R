@@ -6,6 +6,9 @@ JDCExplorations <- function(){
   
   setwd("/home/lprisan/workspace/jdc-data-analysis/logs")
   
+  #this object will contain the summaries of log data for 
+  logSummary <- data.frame()
+  
   # Do the samples available, relative usage of representations and helps per group
   for(file in list.files(pattern = "\\.rda$")){
     logPointsInTime(getwd(),file)
@@ -15,9 +18,93 @@ JDCExplorations <- function(){
   # Do a multi-graph panel for the temporal evolution of usage of each kind of card and each group, for a session
   logManipulativeGroupUsageInSession(getwd())
   logHelpGroupUsageInSession(getwd())
-  #logMapUsageInSession(getwd(),list.files(pattern = "\\.rda$"))
+  
+  logSummary <- getLogSummaries(getwd())
+  setwd("/home/lprisan/workspace/jdc-data-analysis/quests")
+  surveyData <- get(load("Survey.rda"))
+  logCrossedWithSurveys(logSummary, surveyData)
+}
+
+# This function gets basic log statistics for each group (e.g. total duration available, 
+# total samples available, samples with each kind of representation on table, samples 
+# with each kind of help on table)
+getLogSummaries <- function(rootDir){
+  setwd(rootDir)
+  
+  files <- list.files(pattern = "\\.rda$")
+  
+  # We pre-create the vectors for the different metrics
+  Group.Name=character(length(files))
+  Total.Duration = numeric(length(files))
+  Total.Samples = numeric(length(files))
+  Using.Cont = numeric(length(files))
+  Using.Disc = numeric(length(files))
+  Using.Frac = numeric(length(files))
+  Help.Circ = numeric(length(files))
+  Help.Rect = numeric(length(files))
+  Help.Disc = numeric(length(files))
+  Help.Dec = numeric(length(files))
+  Help.Frac = numeric(length(files))
+  
+  for(i in 1:length(files)){
+    data <- get(load(files[i]))
+    data <- addElementUsageVariables(data)
+    
+    Group.Name[i] <- substr(files[i],1,4)
+    Total.Duration[i] <- max(data$timestamp)-min(data$timestamp)
+    Total.Samples[i] <- length(data$timestamp)
+    Using.Cont[i] <- sum(data$UsingCont)
+    Using.Disc[i] <- sum(data$UsingDisc)
+    Using.Frac[i] <- sum(data$UsingFrac)
+    Help.Circ[i] <- sum(data$HelpContCirc)
+    Help.Rect[i] <- sum(data$HelpContRect)
+    Help.Disc[i] <- sum(data$HelpDiscrete)
+    Help.Dec[i] <- sum(data$HelpDecimal)
+    Help.Frac[i] <- sum(data$HelpFraction)
+    
+  }
+  
+  # the log data summary for each group
+  logSummary <- data.frame(Group.Name, 
+                           Total.Duration, 
+                           Total.Samples, 
+                           Using.Cont,
+                           Using.Disc,
+                           Using.Frac,
+                           Help.Circ,
+                           Help.Rect,
+                           Help.Disc,
+                           Help.Dec,
+                           Help.Frac)
+
+  logSummary
+}
+
+# Draws some plots about crossing the log summaries with the survey data and sequence of representations
+logCrossedWithSurveys <- function(logSummary,surveyData){
+  
+  # We merge both tables, will put NAs where we do not have data
+  totalData <- merge(x=surveyData,y=logSummary,by.x="Group.Number",by.y="Group.Name",all=TRUE)
+  # Same thing, but only with the complete rows, no NAs
+  totalDataComplete <- merge(x=surveyData,y=logSummary,by.x="Group.Number",by.y="Group.Name")
+  
+  # We plot the hierarchical clustering of data
+  totalMatrix <- data.matrix(totalDataComplete[,c(1:2,4:17)])
+  hc <- hclust(dist(totalMatrix)) 
+  plot(hc)
+  
+  # We try k-means clustering with 4/5 clusters
+  kmeansObj <- kmeans(totalMatrix, centers=5)
+  
+  # We do SVD
+  matrixOrdered <- totalMatrix[hc$order,]
+  svd1 <- svd(scale(matrixOrdered))
+  plot(svd1$d, xlab="Col",ylab="Singular value")
+  plot(svd1$d^2/sum(svd1$d^2),xlab="Col",ylab="Prop. variance explained");
   
 }
+
+
 
 # Do a multi-graph panel of usage of each kind of manipulative
 logManipulativeGroupUsageInSession <- function(rootDir){

@@ -299,6 +299,7 @@ preprocessJDCLogs <- function(rootDir,doYAMLConversion=FALSE){
   
 }
 
+
 convertLogsToJson <- function(rootDir){
 
   # Store the current dir, to come back to it at the end, and change wd to the rootDir
