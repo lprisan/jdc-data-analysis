@@ -1,5 +1,6 @@
 library("lattice")
 library("ggplot2")
+library("Gmisc")
 
 # This is the global function that runs the whole set of exploratory data analyses
 JDCExplorations <- function(){
@@ -22,12 +23,13 @@ JDCExplorations <- function(){
   logSummary <- getLogSummaries(getwd())
   setwd("/home/lprisan/workspace/jdc-data-analysis/quests")
   surveyData <- get(load("Survey.rda"))
+  basicSurveyPlots(surveyData)
   logCrossedWithSurveys(logSummary, surveyData)
 }
 
 # This function gets basic log statistics for each group (e.g. total duration available, 
 # total samples available, samples with each kind of representation on table, samples 
-# with each kind of help on table)
+# with each kind of help on table, in absolute samples and percentage of existing samples)
 getLogSummaries <- function(rootDir){
   setwd(rootDir)
   
@@ -45,6 +47,14 @@ getLogSummaries <- function(rootDir){
   Help.Disc = numeric(length(files))
   Help.Dec = numeric(length(files))
   Help.Frac = numeric(length(files))
+  Relative.Using.Cont = numeric(length(files))
+  Relative.Using.Disc = numeric(length(files))
+  Relative.Using.Frac = numeric(length(files))
+  Relative.Help.Circ = numeric(length(files))
+  Relative.Help.Rect = numeric(length(files))
+  Relative.Help.Disc = numeric(length(files))
+  Relative.Help.Dec = numeric(length(files))
+  Relative.Help.Frac = numeric(length(files))
   
   for(i in 1:length(files)){
     data <- get(load(files[i]))
@@ -61,7 +71,14 @@ getLogSummaries <- function(rootDir){
     Help.Disc[i] <- sum(data$HelpDiscrete)
     Help.Dec[i] <- sum(data$HelpDecimal)
     Help.Frac[i] <- sum(data$HelpFraction)
-    
+    Relative.Using.Cont[i] <- Using.Cont[i]/Total.Samples[i]
+    Relative.Using.Disc[i] <- Using.Disc[i]/Total.Samples[i]
+    Relative.Using.Frac[i] <- Using.Frac[i]/Total.Samples[i]
+    Relative.Help.Circ[i] <- Help.Circ[i]/Total.Samples[i]
+    Relative.Help.Rect[i] <- Help.Rect[i]/Total.Samples[i]
+    Relative.Help.Disc[i] <- Help.Disc[i]/Total.Samples[i]
+    Relative.Help.Dec[i] <- Help.Dec[i]/Total.Samples[i]
+    Relative.Help.Frac[i] <- Help.Frac[i]/Total.Samples[i]    
   }
   
   # the log data summary for each group
@@ -75,32 +92,171 @@ getLogSummaries <- function(rootDir){
                            Help.Rect,
                            Help.Disc,
                            Help.Dec,
-                           Help.Frac)
+                           Help.Frac,
+                           Relative.Using.Cont,
+                           Relative.Using.Disc,
+                           Relative.Using.Frac,
+                           Relative.Help.Circ,
+                           Relative.Help.Rect,
+                           Relative.Help.Disc,
+                           Relative.Help.Dec,
+                           Relative.Help.Frac)
 
   logSummary
 }
 
+basicSurveyPlots <- function(surveyData){
+  
+  # Basic boxplots of the survey data, total and separated by sequence
+  png("Q1.Boxplot.png",width=1280,height=1024)  
+  par(mfrow=c(1,1))
+  boxplot(surveyData$Q1.More.Fun, ylim=c(1,5), main="Q1", sub="I prefer this way to what we do at school", xlab="Total")
+  dev.off()
+  
+  png("Q1.Boxplot.Sequence.Session.png",width=1280,height=1024)  
+  par(mfrow=c(2,1))
+  boxplot(surveyData$Q1.More.Fun ~ surveyData$Sequence, ylim=c(1,5), main="Q1", xlab="Manipulative Sequence", col=(c("lightgoldenrod","lightgreen")))
+  boxplot(surveyData$Q1.More.Fun ~ surveyData$Sequence * surveyData$Session, ylim=c(1,5), sub="I prefer this way to what we do at school", xlab="Manipulative Sequence and Session", col=(c("lightgoldenrod","lightgreen")))
+  dev.off()
+  
+  png("Q2.Boxplot.png",width=1280,height=1024)  
+  par(mfrow=c(1,1))
+  boxplot(surveyData$Q2.Concrete.Repr, ylim=c(1,5), main="Q2", sub="I prefer concrete representations to abstract/numerical", xlab="Total")
+  dev.off()
+  
+  png("Q2.Boxplot.Sequence.Session.png",width=1280,height=1024)  
+  par(mfrow=c(2,1),mar=c(5,2,2,2),cex.axis=0.75)
+  boxplot(surveyData$Q2.Concrete.Repr ~ surveyData$Sequence, ylim=c(1,5), main="Q2", xlab="Manipulative Sequence", col=(c("lightgoldenrod","lightgreen")))
+  boxplot(surveyData$Q2.Concrete.Repr ~ surveyData$Sequence * surveyData$Session, ylim=c(1,5), sub="I prefer concrete representations to abstract/numerical", xlab="Manipulative Sequence and Session", col=(c("lightgoldenrod","lightgreen")))
+  dev.off()
+  
+  png("Q3.Boxplot.png",width=1280,height=1024)  
+  par(mfrow=c(1,1))
+  boxplot(surveyData$Q3.Continuous.Repr, ylim=c(1,5), main="Q3", sub="I prefer continuous tangibles to tokens", xlab="Total")
+  dev.off()
+  
+  png("Q3.Boxplot.Sequence.Session.png",width=1280,height=1024)  
+  par(mfrow=c(2,1),mar=c(5,2,2,2),cex.axis=0.75)
+  boxplot(surveyData$Q3.Continuous.Repr ~ surveyData$Sequence, ylim=c(1,5), main="Q1", xlab="Manipulative Sequence", col=(c("lightgoldenrod","lightgreen")))
+  boxplot(surveyData$Q3.Continuous.Repr ~ surveyData$Sequence * surveyData$Session, ylim=c(1,5), sub="I prefer continuous tangibles to tokens", xlab="Manipulative Sequence and Session", col=(c("lightgoldenrod","lightgreen")))
+  dev.off()
+  
+}
+
+
 # Draws some plots about crossing the log summaries with the survey data and sequence of representations
 logCrossedWithSurveys <- function(logSummary,surveyData){
   
+  # We create a summary/average of the survey data by group
+  surveySummary <- as.data.frame((aggregate(Sequence~Group.Number, data=surveyData, unique))$Group.Number)
+  names(surveySummary) <- "Group.Name"
+  surveySummary$Sequence <- (aggregate(Sequence~Group.Number, data=surveyData, unique))$Sequence
+  surveySummary$Session <- (aggregate(Session~Group.Number, data=surveyData, unique))$Session
+  surveySummary$Q1.More.Fun <- (aggregate(Q1.More.Fun~Group.Number, data=surveyData, mean))$Q1.More.Fun
+  surveySummary$Q2.Concrete.Repr <- (aggregate(Q2.Concrete.Repr~Group.Number, data=surveyData, mean))$Q2.Concrete.Repr
+  surveySummary$Q3.Continuous.Repr <- (aggregate(Q3.Continuous.Repr~Group.Number, data=surveyData, mean))$Q3.Continuous.Repr
+  
+  
   # We merge both tables, will put NAs where we do not have data
-  totalData <- merge(x=surveyData,y=logSummary,by.x="Group.Number",by.y="Group.Name",all=TRUE)
+  totalData <- merge(x=surveySummary,y=logSummary,by.x="Group.Name",by.y="Group.Name",all=TRUE)
+  totalData$Session <- as.factor(totalData$Session)
+  
   # Same thing, but only with the complete rows, no NAs
-  totalDataComplete <- merge(x=surveyData,y=logSummary,by.x="Group.Number",by.y="Group.Name")
+  totalDataComplete <- merge(x=surveySummary,y=logSummary,by.x="Group.Name",by.y="Group.Name")
+  totalDataComplete$Session <- as.factor(totalDataComplete$Session)
+  totalDataComplete$Cont.Disc.Ratio <- totalDataComplete$Relative.Using.Cont/totalDataComplete$Relative.Using.Disc
   
-  # We plot the hierarchical clustering of data
-  totalMatrix <- data.matrix(totalDataComplete[,c(1:2,4:17)])
-  hc <- hclust(dist(totalMatrix)) 
-  plot(hc)
   
-  # We try k-means clustering with 4/5 clusters
-  kmeansObj <- kmeans(totalMatrix, centers=5)
+  png("Survey.Usage.Scatterplots.png",width=1280,height=1024)  
+  # Scatterplots of survey answers (group-averaged) vs relative usage of different elements (3x3) colored by sequence
+  p1 <- ggplot(totalDataComplete, aes(x=Relative.Using.Cont, y=Q1.More.Fun, colour=Sequence)) +
+    geom_point() + geom_smooth(method="lm") + ggtitle("Usage of Continuous vs. Amusement") + ylim(c(1,5))
+  p2 <- ggplot(totalDataComplete, aes(x=Relative.Using.Cont, y=Q2.Concrete.Repr, colour=Sequence)) +
+    geom_point() + geom_smooth(method="lm") + ggtitle("Usage of Continuous vs. Preference for Concrete/Manipulative (vs. Numeric)") + ylim(c(1,5))
+  p3 <- ggplot(totalDataComplete, aes(x=Relative.Using.Cont, y=Q3.Continuous.Repr, colour=Sequence)) +
+    geom_point() + geom_smooth(method="lm") + ggtitle("Usage of Continuous vs. Preference for Continuous (vs. Tokens)") + ylim(c(1,5))
+  
+  p4 <- ggplot(totalDataComplete, aes(x=Relative.Using.Disc, y=Q1.More.Fun, colour=Sequence)) +
+    geom_point() + geom_smooth(method="lm") + ggtitle("Usage of Discrete/Tokens vs. Amusement") + ylim(c(1,5))
+  p5 <- ggplot(totalDataComplete, aes(x=Relative.Using.Disc, y=Q2.Concrete.Repr, colour=Sequence)) +
+    geom_point() + geom_smooth(method="lm") + ggtitle("Usage of Discrete/Tokens vs. Preference for Concrete/Manipulative (vs. Numeric)") + ylim(c(1,5))
+  p6 <- ggplot(totalDataComplete, aes(x=Relative.Using.Disc, y=Q3.Continuous.Repr, colour=Sequence)) +
+    geom_point() + geom_smooth(method="lm") + ggtitle("Usage of Discrete/Tokens vs. Preference for Continuous (vs. Tokens)") + ylim(c(1,5))
+  
+  p7 <- ggplot(totalDataComplete, aes(x=Relative.Using.Frac, y=Q1.More.Fun, colour=Sequence)) +
+    geom_point() + geom_smooth(method="lm") + ggtitle("Usage of Abstract/Fractions vs. Amusement") + ylim(c(1,5))
+  p8 <- ggplot(totalDataComplete, aes(x=Relative.Using.Frac, y=Q2.Concrete.Repr, colour=Sequence)) +
+    geom_point() + geom_smooth(method="lm") + ggtitle("Usage of Abstract/Fractions vs. Preference for Concrete/Manipulative (vs. Numeric)") + ylim(c(1,5))
+  p9 <- ggplot(totalDataComplete, aes(x=Relative.Using.Frac, y=Q3.Continuous.Repr, colour=Sequence)) +
+    geom_point() + geom_smooth(method="lm") + ggtitle("Usage of Abstract/Fractions vs. Preference for Continuous (vs. Tokens)") + ylim(c(1,5))
+
+  p10 <- ggplot(totalDataComplete, aes(x=log10(Cont.Disc.Ratio), y=Q1.More.Fun, colour=Sequence)) +
+    geom_point() + geom_smooth(method="lm") + ggtitle("(Ratio of Continuous vs. Discrete) vs. Amusement") + ylim(c(1,5))
+  p11 <- ggplot(totalDataComplete, aes(x=log10(Cont.Disc.Ratio), y=Q2.Concrete.Repr, colour=Sequence)) +
+    geom_point() + geom_smooth(method="lm") + ggtitle("(Ratio of Continuous vs. Discrete) vs. Preference for Concrete/Manipulative (vs. Numeric)") + ylim(c(1,5))
+  p12 <- ggplot(totalDataComplete, aes(x=log10(Cont.Disc.Ratio), y=Q3.Continuous.Repr, colour=Sequence)) +
+    geom_point() + geom_smooth(method="lm") + ggtitle("(Ratio of Continuous vs. Discrete) vs. Preference for Continuous (vs. Tokens)") + ylim(c(1,5))
+  multiplot(p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, cols=4)
+  dev.off()  
+
+  png("Survey.Usage.Scatterplots.Detail.png",width=1280,height=1024)  
+  multiplot(p7, p8, p9, p10, p11, p12, cols=2)
+  dev.off()
+  
+  # We plot several hierarchical clusterings of data
+  # We select only the sequence, (group averaged) survey questions, ratio of usage
+  totalMatrix1 <- data.matrix(totalDataComplete[,c(2,4:6,25)])
+  hc <- hclust(dist(totalMatrix1)) 
+  png("Hierarchical.Dendrogram.5feats.png",width=1280,height=1024)
+  par(mfrow=c(1,1))
+  myplclust(hc,lab=totalDataComplete$Group.Name,lab.col=unclass(totalDataComplete$Sequence),main="Cluster Dendrogram 5 features (sequence, survey, ratio of cont/discr)")
+  #plot(hc)
+  dev.off()
+
+  # We select the sequence, (group averaged) survey questions, manipulative usages and ratio of usage
+  totalMatrix2 <- data.matrix(totalDataComplete[,c(2,4:6,17:19,25)])
+  hc <- hclust(dist(totalMatrix2)) 
+  png("Hierarchical.Dendrogram.8feats.png",width=1280,height=1024)
+  par(mfrow=c(1,1))
+  myplclust(hc,lab=totalDataComplete$Group.Name,lab.col=unclass(totalDataComplete$Sequence),main="Cluster Dendrogram 8 features (sequence, survey, relative usage, ratio of cont/discr)")
+  dev.off()
+  
+  # We select the sequence, (group averaged) survey questions, manipulative usages, help usages and ratio of usage
+  totalMatrix3 <- data.matrix(totalDataComplete[,c(2,4:6,17:25)])
+  hc <- hclust(dist(totalMatrix3)) 
+  png("Hierarchical.Dendrogram.13feats.png",width=1280,height=1024)
+  par(mfrow=c(1,1))
+  myplclust(hc,lab=totalDataComplete$Group.Name,lab.col=unclass(totalDataComplete$Sequence),main="Cluster Dendrogram 13 features (sequence, survey, relative usage, ratio of cont/discr, relative usage of help)")
+  dev.off()
+  
+  # TODO: Add to the dendrogram labels the number and percentage of finished maps??
+  
+  # We try k-means clustering with 5 clusters (it looks like the hierarchical clustering gives 5 big clusters)
+  dataSubset <- cbind(as.numeric(totalDataComplete[,2]),totalDataComplete[,c(4:6,17:19,25)])
+  kmeansObj <- kmeans(dataSubset, centers=5, nstart=100)
+  dataSubset$clusters <- factor(kmeansObj$cluster)
+  dataSubset$Group.Name <- totalDataComplete$Group.Name
+  png("KMeans.8feats.5clusters.png",width=1280,height=768)
+  p1 <- ggplot(dataSubset, aes(x=log10(Cont.Disc.Ratio), y=Q1.More.Fun, colour=clusters)) +
+    geom_point(size=5,alpha=0.4) + ggtitle("Ratio Cont/Discr usage vs. Amusement") + ylim(c(1,5))
+  p2 <- ggplot(dataSubset, aes(x=log10(Cont.Disc.Ratio), y=Q2.Concrete.Repr, colour=clusters)) +
+    geom_point(size=5,alpha=0.4) + ggtitle("Ratio Cont/Discr usage vs. Preference for Concrete/Manipulative (vs. Numeric)") + ylim(c(1,5))
+  p3 <- ggplot(dataSubset, aes(x=log10(Cont.Disc.Ratio), y=Q3.Continuous.Repr, colour=clusters)) +
+    geom_point(size=5,alpha=0.4) + ggtitle("Ratio Cont/Discr usage vs. Preference for Continuous (vs. Tokens)") + ylim(c(1,5))
+  
+  multiplot(p1, p2, p3, cols=3)
+  dev.off()
   
   # We do SVD
-  matrixOrdered <- totalMatrix[hc$order,]
-  svd1 <- svd(scale(matrixOrdered))
-  plot(svd1$d, xlab="Col",ylab="Singular value")
-  plot(svd1$d^2/sum(svd1$d^2),xlab="Col",ylab="Prop. variance explained");
+  png("Singular.Vector.Decomposition.Contributors.png",width=1280,height=1024)
+  getSvdMostInfluential(totalMatrix3, 
+                        quantile=.8, 
+                        similarity_threshold = .9,
+                        plot_threshold = .05,
+                        plot_selection = TRUE)
+  dev.off()
+  
+  # TODO: Do more clear graphs of the SVD/PCA
   
 }
 
@@ -251,3 +407,72 @@ logSamplesElementsPresent <- function(rootDir,datafile){
   
   
 }
+
+
+# Multiple plot function, from http://www.cookbook-r.com/Graphs/Multiple_graphs_on_one_page_(ggplot2)/
+#
+# ggplot objects can be passed in ..., or to plotlist (as a list of ggplot objects)
+# - cols:   Number of columns in layout
+# - layout: A matrix specifying the layout. If present, 'cols' is ignored.
+#
+# If the layout is something like matrix(c(1,2,3,3), nrow=2, byrow=TRUE),
+# then plot 1 will go in the upper left, 2 will go in the upper right, and
+# 3 will go all the way across the bottom.
+#
+multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
+  require(grid)
+  
+  # Make a list from the ... arguments and plotlist
+  plots <- c(list(...), plotlist)
+  
+  numPlots = length(plots)
+  
+  # If layout is NULL, then use 'cols' to determine layout
+  if (is.null(layout)) {
+    # Make the panel
+    # ncol: Number of columns of plots
+    # nrow: Number of rows needed, calculated from # of cols
+    layout <- matrix(seq(1, cols * ceiling(numPlots/cols)),
+                     ncol = cols, nrow = ceiling(numPlots/cols))
+  }
+  
+  if (numPlots==1) {
+    print(plots[[1]])
+    
+  } else {
+    # Set up the page
+    grid.newpage()
+    pushViewport(viewport(layout = grid.layout(nrow(layout), ncol(layout))))
+    
+    # Make each plot, in the correct location
+    for (i in 1:numPlots) {
+      # Get the i,j matrix positions of the regions that contain this subplot
+      matchidx <- as.data.frame(which(layout == i, arr.ind = TRUE))
+      
+      print(plots[[i]], vp = viewport(layout.pos.row = matchidx$row,
+                                      layout.pos.col = matchidx$col))
+    }
+  }
+}
+
+myplclust <- function( hclust, lab=hclust$labels, lab.col=rep(1,length(hclust$labels)), hang=0.1,...){
+  ## modifiction of plclust for plotting hclust objects *in colour*!
+  ## Copyright Eva KF Chan 2009
+  ## Arguments:
+  ##    hclust:    hclust object
+  ##    lab:        a character vector of labels of the leaves of the tree
+  ##    lab.col:    colour for the labels; NA=default device foreground colour
+  ##    hang:     as in hclust & plclust
+  ## Side effect:
+  ##    A display of hierarchical cluster with coloured leaf labels.
+  y <- rep(hclust$height,2)
+  x <- as.numeric(hclust$merge)
+  y <- y[which(x<0)]
+  x <- x[which(x<0)]
+  x <- abs(x)
+  y <- y[order(x)]
+  x <- x[order(x)]
+  plot( hclust, labels=FALSE, hang=hang, ... )
+  text( x=x, y=y[hclust$order]-(max(hclust$height)*hang), labels=lab[hclust$order], col=lab.col[hclust$order], srt=90, adj=c(1,0.5), xpd=NA, ... )
+}
+
