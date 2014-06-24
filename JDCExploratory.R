@@ -44,6 +44,58 @@ allCrossedDataPlots <- function(logSummary, surveyData, mapsData){
   
   totalDataComplete <- merge(x=totalDataComplete,y=mapsData)
   
+  # We calculate the maps finished (from the video analysis) vs the total time spent doing maps (in minutes, from the logs)
+  totalDataComplete$Maps.perTime <- totalDataComplete$Count.Finished/(totalDataComplete$Total.Duration/60000)
+  
+  png("Finished.perTime.Boxplots.png",width=1280,height=1024)  
+  par(mfrow=c(2,2))
+  boxplot(totalDataComplete$Maps.perTime, main="Maps completed / Total Time")
+  boxplot(totalDataComplete$Maps.perTime ~ totalDataComplete$Sequence, main="Maps completed / Total Time", xlab="Manipulative Sequence", col=(c("lightgoldenrod","lightgreen")))
+  boxplot(totalDataComplete$Maps.perTime ~ totalDataComplete$Session, main="Maps completed / Total Time", xlab="Session")
+  boxplot(totalDataComplete$Maps.perTime ~ totalDataComplete$Sequence * totalDataComplete$Session, xlab="Manipulative Sequence and Session", col=(c("lightgoldenrod","lightgreen")))
+  dev.off()
+  
+  png("Finished.vsTotalMaps.Boxplots.png",width=1280,height=1024)  
+  par(mfrow=c(2,2))
+  boxplot(totalDataComplete$Proportion.Finished, main="Maps completed / Total Maps tried")
+  boxplot(totalDataComplete$Proportion.Finished ~ totalDataComplete$Sequence, main="Maps completed / Total Maps tried", xlab="Manipulative Sequence", col=(c("lightgoldenrod","lightgreen")))
+  boxplot(totalDataComplete$Proportion.Finished ~ totalDataComplete$Session, main="Maps completed / Total Maps tried", xlab="Session")
+  boxplot(totalDataComplete$Proportion.Finished ~ totalDataComplete$Sequence * totalDataComplete$Session, xlab="Manipulative Sequence and Session", col=(c("lightgoldenrod","lightgreen")))
+  dev.off()
+
+  png("Finished.Cont.Disc.Ratio.Scatterplots.png",width=1280,height=768)  
+  p1 <- ggplot(totalDataComplete, aes(x=log10(Cont.Disc.Ratio), y=Maps.perTime)) + geom_smooth(method="lm") +
+    geom_point(size=5,alpha=0.4) + ggtitle("Maps completed / Time vs. Ratio Cont/Discr usage")
+  p2 <- ggplot(totalDataComplete, aes(x=log10(Cont.Disc.Ratio), y=Proportion.Finished)) + geom_smooth(method="lm") +
+    geom_point(size=5,alpha=0.4) + ggtitle("Ratio of maps completed vs. Ratio Cont/Discr usage")
+  p3 <- ggplot(totalDataComplete, aes(x=log10(Cont.Disc.Ratio), y=Maps.perTime, colour=Sequence)) + 
+    geom_point(size=5,alpha=0.4) + ggtitle("Maps completed / Time vs. Ratio Cont/Discr usage")
+  p4 <- ggplot(totalDataComplete, aes(x=log10(Cont.Disc.Ratio), y=Proportion.Finished, colour=Sequence)) + 
+    geom_point(size=5,alpha=0.4) + ggtitle("Ratio of maps completed vs. Ratio Cont/Discr usage")
+  p5 <- ggplot(totalDataComplete, aes(x=log10(Cont.Disc.Ratio), y=Maps.perTime, colour=Session)) + 
+    geom_point(size=5,alpha=0.4) + ggtitle("Maps completed / Time vs. Ratio Cont/Discr usage")
+  p6 <- ggplot(totalDataComplete, aes(x=log10(Cont.Disc.Ratio), y=Proportion.Finished, colour=Session)) + 
+    geom_point(size=5,alpha=0.4) + ggtitle("Ratio of maps completed vs. Ratio Cont/Discr usage")
+  multiplot(p1, p2, p3, p4, p5, p6, cols=3)
+  dev.off()
+  
+  png("Finished.Frac.Usage.Scatterplots.png",width=1280,height=768)  
+  p1 <- ggplot(totalDataComplete, aes(x=Relative.Using.Frac, y=Maps.perTime)) + geom_smooth(method="lm") +
+    geom_point(size=5,alpha=0.4) + ggtitle("Maps completed / Time vs. Abstract fraction usage")
+  p2 <- ggplot(totalDataComplete, aes(x=Relative.Using.Frac, y=Proportion.Finished)) + geom_smooth(method="lm") +
+    geom_point(size=5,alpha=0.4) + ggtitle("Ratio of maps completed vs. Abstract fraction usage")
+  p3 <- ggplot(totalDataComplete, aes(x=Relative.Using.Frac, y=Maps.perTime, colour=Sequence)) + 
+    geom_point(size=5,alpha=0.4) + ggtitle("Maps completed / Time vs. Abstract fraction usage")
+  p4 <- ggplot(totalDataComplete, aes(x=Relative.Using.Frac, y=Proportion.Finished, colour=Sequence)) + 
+    geom_point(size=5,alpha=0.4) + ggtitle("Ratio of maps completed vs. Abstract fraction usage")
+  p5 <- ggplot(totalDataComplete, aes(x=Relative.Using.Frac, y=Maps.perTime, colour=Session)) + 
+    geom_point(size=5,alpha=0.4) + ggtitle("Maps completed / Time vs. Abstract fraction usage")
+  p6 <- ggplot(totalDataComplete, aes(x=Relative.Using.Frac, y=Proportion.Finished, colour=Session)) + 
+    geom_point(size=5,alpha=0.4) + ggtitle("Ratio of maps completed vs. Abstract fraction usage")
+  multiplot(p1, p2, p3, p4, p5, p6, cols=3)
+  dev.off()
+  
+  
 }
 
 
