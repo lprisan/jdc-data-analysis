@@ -25,7 +25,28 @@ JDCExplorations <- function(){
   surveyData <- get(load("Survey.rda"))
   basicSurveyPlots(surveyData)
   logCrossedWithSurveys(logSummary, surveyData)
+  
+  setwd("/home/lprisan/workspace/jdc-data-analysis/maps")
+  mapsData <- get(load("Maps.rda"))
+  mapPerformancePlots()
+  allCrossedDataPlots(logSummary, surveyData, mapsData)
 }
+
+allCrossedDataPlots <- function(logSummary, surveyData, mapsData){
+  
+  # We create a summary/average of the survey data by group
+  surveySummary <- getSurveySummary(surveyData)
+  
+  # Same thing, but only with the complete rows, no NAs
+  totalDataComplete <- merge(x=surveySummary,y=logSummary,by.x="Group.Name",by.y="Group.Name")
+  totalDataComplete$Session <- as.factor(totalDataComplete$Session)
+  totalDataComplete$Cont.Disc.Ratio <- totalDataComplete$Relative.Using.Cont/totalDataComplete$Relative.Using.Disc
+  
+  totalDataComplete <- merge(x=totalDataComplete,y=mapsData)
+  
+}
+
+
 
 # This function gets basic log statistics for each group (e.g. total duration available, 
 # total samples available, samples with each kind of representation on table, samples 
@@ -143,11 +164,8 @@ basicSurveyPlots <- function(surveyData){
   
 }
 
-
-# Draws some plots about crossing the log summaries with the survey data and sequence of representations
-logCrossedWithSurveys <- function(logSummary,surveyData){
+getSurveySummary <- function(surveyData){
   
-  # We create a summary/average of the survey data by group
   surveySummary <- as.data.frame((aggregate(Sequence~Group.Number, data=surveyData, unique))$Group.Number)
   names(surveySummary) <- "Group.Name"
   surveySummary$Sequence <- (aggregate(Sequence~Group.Number, data=surveyData, unique))$Sequence
@@ -155,7 +173,16 @@ logCrossedWithSurveys <- function(logSummary,surveyData){
   surveySummary$Q1.More.Fun <- (aggregate(Q1.More.Fun~Group.Number, data=surveyData, mean))$Q1.More.Fun
   surveySummary$Q2.Concrete.Repr <- (aggregate(Q2.Concrete.Repr~Group.Number, data=surveyData, mean))$Q2.Concrete.Repr
   surveySummary$Q3.Continuous.Repr <- (aggregate(Q3.Continuous.Repr~Group.Number, data=surveyData, mean))$Q3.Continuous.Repr
+
+  surveySummary
+}
+
+
+# Draws some plots about crossing the log summaries with the survey data and sequence of representations
+logCrossedWithSurveys <- function(logSummary,surveyData){
   
+  # We create a summary/average of the survey data by group
+  surveySummary <- getSurveySummary(surveyData)
   
   # We merge both tables, will put NAs where we do not have data
   totalData <- merge(x=surveySummary,y=logSummary,by.x="Group.Name",by.y="Group.Name",all=TRUE)
@@ -474,5 +501,68 @@ myplclust <- function( hclust, lab=hclust$labels, lab.col=rep(1,length(hclust$la
   x <- x[order(x)]
   plot( hclust, labels=FALSE, hang=hang, ... )
   text( x=x, y=y[hclust$order]-(max(hclust$height)*hang), labels=lab[hclust$order], col=lab.col[hclust$order], srt=90, adj=c(1,0.5), xpd=NA, ... )
+}
+
+# Draws some simple maps about the finished and unfinished maps for each group. 
+# It assumes the csvs with the data are in the working directory!
+mapPerformancePlots <- function(){
+  
+  #Overall groups
+  ResumeMaps <- read.csv("ResumeMaps4.csv")
+  table <- ResumeMaps$Count
+  table <- matrix(table, ncol = 17, byrow = T)
+  colnames(table) <- levels(ResumeMaps$Label)
+  rownames(table) <- levels(ResumeMaps$Level)
+  colors <- c("black","white")
+  png("Overall.finished.and.unfinished.maps.png")
+  barplot((table),beside = FALSE, col = colors, ylim = c(0,10), xlab = "Session and group", main = "Finished and Unfinished maps", legend.text = TRUE, args.legend = list(x = "topright", bty = "n"))
+  dev.off()
+  
+  #Per session
+  Session2 <- read.csv("Session2.csv")
+  Session3 <- read.csv("Session3.csv")
+  Session4 <- read.csv("Session4.csv")
+  Session6 <- read.csv("Session6.csv")
+  
+  #In session 2, we have 3 groups
+  table_s2 <- Session2$Count
+  table_s2 <- matrix(table_s2, ncol = 3, byrow = T)
+  colnames(table_s2) <- levels(Session2$Label)
+  rownames(table_s2) <- levels(Session2$Level)
+  colors <- c("black","white")
+  png("Session2.finished.and.unfinished.png")
+  barplot((table_s2),beside = FALSE, col = colors, ylim = c(0,10), xlab = "Group", main = "Finished and Unfinished maps Session 2", legend.text = TRUE, args.legend = list(x = "topright", bty = "n"))
+  dev.off()
+  
+  #In session 3, we have 4 groups
+  table_s3 <- Session3$Count
+  table_s3 <- matrix(table_s3, ncol = 4, byrow = T)
+  colnames(table_s3) <- levels(Session3$Label)
+  rownames(table_s3) <- levels(Session3$Level)
+  colors <- c("black","white")
+  png("Session3.finished.and.unfinished.png")
+  barplot((table_s3),beside = FALSE, col = colors, ylim = c(0,10), xlab = "Group", main = "Finished and Unfinished maps Session 3", legend.text = TRUE, args.legend = list(x = "topright", bty = "n"))
+  dev.off()
+  
+  #In session 4, we have 5 groups
+  table_s4 <- Session4$Count
+  table_s4 <- matrix(table_s4, ncol = 5, byrow = T)
+  colnames(table_s4) <- levels(Session4$Label)
+  rownames(table_s4) <- levels(Session4$Level)
+  colors <- c("black","white")
+  png("Session4.finished.and.unfinished.png")
+  barplot((table_s4),beside = FALSE, col = colors, ylim = c(0,10), xlab = "Group", main = "Finished and Unfinished maps Session 4", legend.text = TRUE, args.legend = list(x = "topright", bty = "n"))
+  dev.off()
+  
+  #In session 6, we have 5 groups
+  table_s6 <- Session6$Count
+  table_s6 <- matrix(table_s6, ncol = 5, byrow = T)
+  colnames(table_s6) <- levels(Session6$Label)
+  rownames(table_s6) <- levels(Session6$Level)
+  colors <- c("black","white")
+  png("Session6.finished.and.unfinished.png")
+  barplot((table_s6),beside = FALSE, col = colors, ylim = c(0,10), xlab = "Group", main = "Finished and Unfinished maps Session 6", legend.text = TRUE, args.legend = list(x = "topright", bty = "n"))
+  dev.off()
+  
 }
 
