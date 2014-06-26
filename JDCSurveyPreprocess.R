@@ -7,6 +7,14 @@ preprocessJDCSurveys <- function(rootDir){
   setwd(rootDir)
   # load the CSV
   data <- read.csv("StudentsQuestionnaireSequence.csv")
+  
+  # We correct group labelling due to lamp changes in session 2
+  # First, we convert the group variable to character
+  data$Group.Number <- as.character(data$Group.Number)
+  data[data$Group.Number=="S2G4","Group.Number"] <- "S2G3"
+  data[data$Group.Number=="S2G5","Group.Number"] <- "S2G4"
+  data$Group.Number <- as.factor(data$Group.Number)
+  
   # generate unique student code from the group label
   data$Student.Number <- paste(data$Group.Number,"P",data$Student.Number,sep="")
   
