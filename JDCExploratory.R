@@ -4,39 +4,64 @@ require("Gmisc")
 require("zoo")
 
 # This is the global function that runs the whole set of exploratory data analyses
-JDCExplorations <- function(){
+# It receives the root dir containing the logs/, maps/, quests/, eyetrack/ folders
+# and if not passed, it assumes it is the current one
+JDCExplorations <- function(rootDir="."){
   
-  setwd("/home/lprisan/workspace/jdc-data-analysis/logs")
+  originalDir <- getwd()
+    
+  setwd(rootDir)
+  rootDir <- getwd() # So that we get the full path
   
-  #this object will contain the summaries of log data for 
-  logSummary <- data.frame()
-  
-  # Do the samples available, relative usage of representations and helps per group
-  for(file in list.files(pattern = "\\.rda$")){
-    logPointsInTime(getwd(),file)
-    logSamplesElementsPresent(getwd(),file)
-  }
-  
-  # Do a multi-graph panel for the temporal evolution of usage of each kind of card and each group, for a session
-  logManipulativeGroupUsageInSession(getwd())
-  logHelpGroupUsageInSession(getwd())
-  
-  logSummary <- getLogSummaries(getwd())
-  setwd("/home/lprisan/workspace/jdc-data-analysis/quests")
+  # We get the log data  
+  logdir <- paste(rootDir,"/logs",sep="")
+
+#   # Do the samples available, relative usage of representations and helps per group
+#   for(file in list.files(path=logdir,pattern = "\\.rda$")){
+#     logPointsInTime(logdir,file)
+#     logSamplesElementsPresent(logdir,file)
+#   }
+#   # Do a multi-graph panel for the temporal evolution of usage of each kind of card and each group, for a session
+#   logManipulativeGroupUsageInSession(logdir)
+#   logHelpGroupUsageInSession(logdir)
+  # We get some summaries of the logs, eliminating the temporal component (relative usages of different elements)
+  logSummary <- getLogSummaries(logdir)
+  # TODO: get the portions of the logs relative to activity 4 (free choice of elements)
+
+  # We get the questionnaires/surveys data
+  questdir <- paste(rootDir,"/quests",sep="")
+
+  setwd(questdir)
   surveyData <- get(load("Survey.rda"))
+  # We do some basic plots of survey data
   basicSurveyPlots(surveyData)
+  # We do plots crossing logs (summarized) and survey data, including some cluster analysis
   logCrossedWithSurveys(logSummary, surveyData)
-  
-  setwd("/home/lprisan/workspace/jdc-data-analysis/maps")
+
+  # We get basic results of map completion by the groups
+  mapdir <- paste(rootDir,"/maps",sep="")
+  setwd(mapdir)
   mapsData <- get(load("Maps.rda"))
+  # We plot the data from the map completion data
   mapPerformancePlots()
+
+  # We do some other plots crossing element usage (from the logs), map completion and survey responses
   allCrossedDataPlots(logSummary, surveyData, mapsData)
   
-  setwd("/home/lprisan/workspace/jdc-data-analysis/eyetrack")
+  # We get the teacher's eyetracking data
+  eyedir <- paste(rootDir,"/eyetrack",sep="")
+  setwd(eyedir)
   eyedata <- get(load("Eyetracker.rda"))
+  # We do some basic plotting of eyetracking parameters
   eyetrackerPlots(eyedata)
+
+  # We go back to the original directory
+  setwd(originalDir)
 }
 
+# This function receives a data frame with eyetracking events (pupil diameter), and it
+# draws basic line plots regarding their evolution over time (using a sliding window)
+# Currently, calculates mean and standard deviation over the defined windows
 eyetrackerPlots <- function(data, window=1000, slide=10){
   
   # We split each session's data, and put it into a list
@@ -65,6 +90,8 @@ eyetrackerPlots <- function(data, window=1000, slide=10){
   
 }
 
+# This function gets as input the data from all our sources (logs, surveys, 
+# video coding of maps completed) and plots a few  crossings between them
 allCrossedDataPlots <- function(logSummary, surveyData, mapsData){
   
   # We create a summary/average of the survey data by group
