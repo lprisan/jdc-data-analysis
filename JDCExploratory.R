@@ -1,6 +1,7 @@
-library("lattice")
-library("ggplot2")
-library("Gmisc")
+require("lattice")
+require("ggplot2")
+require("Gmisc")
+require("zoo")
 
 # This is the global function that runs the whole set of exploratory data analyses
 JDCExplorations <- function(){
@@ -30,6 +31,38 @@ JDCExplorations <- function(){
   mapsData <- get(load("Maps.rda"))
   mapPerformancePlots()
   allCrossedDataPlots(logSummary, surveyData, mapsData)
+  
+  setwd("/home/lprisan/workspace/jdc-data-analysis/eyetrack")
+  eyedata <- get(load("Eyetracker.rda"))
+  eyetrackerPlots(eyedata)
+}
+
+eyetrackerPlots <- function(data, window=1000, slide=10){
+  
+  # We split each session's data, and put it into a list
+  data$Session <- as.factor(data$Session)
+  sessionsdata <- split(data,data$Session)
+  
+  # We make a sliding window mean of the data
+  for(i in 1:length(sessionsdata)){
+    png(paste("Session",sessionsdata[[i]]$Session[[1]],".Pupil.Diameter.",window,"samples.slide",slide,".png",sep=""),width=1280,height=1024)  
+    par(mfcol=c(2,1))
+    meandata <- rollapply(sessionsdata[[i]]$L.Pupil.Diameter..mm., width = window, by = slide, FUN = mean, align = "left")
+    plot(meandata, type="n", main=paste("PD mean, Session",sessionsdata[[i]]$Session[[1]]))
+    lines(meandata)
+    meandata2 <- rollapply(sessionsdata[[i]]$R.Pupil.Diameter..mm., width = window, by = slide, FUN = mean, align = "left")
+    lines(meandata2,col="blue")
+    
+    stddata <- rollapply(sessionsdata[[i]]$L.Pupil.Diameter..mm., width = window, by = slide, FUN = sd, align = "left")
+    plot(stddata, type="n", main=paste("PD std, Session",sessionsdata[[i]]$Session[[1]]))
+    lines(stddata)
+    stddata2 <- rollapply(sessionsdata[[i]]$R.Pupil.Diameter..mm., width = window, by = slide, FUN = sd, align = "left")
+    lines(stddata2,col="blue")
+    dev.off()
+  }
+  
+  
+  
 }
 
 allCrossedDataPlots <- function(logSummary, surveyData, mapsData){

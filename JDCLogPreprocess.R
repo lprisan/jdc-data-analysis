@@ -1,9 +1,112 @@
-library(jsonlite)
-library(data.table)
-library(plyr)
+require(jsonlite)
+# require(data.table)
+require(plyr)
 
 displayWidth <- 1280
 displayHeight <- 768
+
+
+
+# preprocessJDCLogs - Clean and organize
+# This is the overall function in charge of the preprocessing and cleaning of the log data from the JDC experiment
+# Parameters: rootDir the directory in which the logs to be merged/split are, in folders called "lamp 1", "lamp 2"...
+preprocessJDCLogs <- function(rootDir,doYAMLConversion=FALSE){
+  
+  cat ("Please ensure that all .log files have ending parentheses so that they are valid pseudo-yaml, and save them as .yaml files. Then press [enter] to continue")
+  line <- readline()
+  
+  # Convert the .yaml files to JSON .json files
+  if(doYAMLConversion){
+    convertLogsToJson(paste(rootDir, "lamp 1", sep="/"))
+    convertLogsToJson(paste(rootDir, "lamp 2", sep="/"))
+    convertLogsToJson(paste(rootDir, "lamp 3", sep="/"))
+    convertLogsToJson(paste(rootDir, "lamp 4", sep="/"))
+    convertLogsToJson(paste(rootDir, "lamp 5", sep="/"))
+  }
+  
+  
+  # We import the groups, start and end times from a csv in the rootDir
+  syncData <- read.csv(paste(rootDir,"ActivityTiming-synchronization.csv", sep="/"), stringsAsFactors=FALSE)
+  
+  options(digits.secs = 3)
+  
+  # for each group, we get and clean the data
+  for(i in 1:length(syncData$Code)){
+    # We calculate the time limits (for now, based on the expected time slots)
+    start <- as.POSIXct(strptime(syncData$RealStart[i], "%Y-%m-%d %H:%M:%OS"))
+    end <- as.POSIXct(strptime(syncData$RealEnd[i], "%Y-%m-%d %H:%M:%OS"))
+    mergeSplitLogFiles(paste(rootDir, paste("lamp ",as.character(syncData$Lamp..[i]),sep=""), sep="/"),start,end,syncData$Code[i])
+  }
+  
+  #We merge manually the two composite group data, and write it to a file again
+  cat ("Doing manual join of groups fragmented across lamps\n")
+  s2g3a <- get(load('S2G3a.rda')) 
+  s2g3b <- get(load('S2G3b.rda'))
+  totalData <- rbind(s2g3a,s2g3b) 
+  save(totalData,file="S2G3.rda",compress=TRUE)
+  
+  # s2g4a <- get(load('S2G4a.rda')) # From this part, we lost the logs!
+  totalData <- get(load('S2G4b.rda'))
+  # totalData <- rbind(s2g4a,s2g4b) 
+  save(totalData,file="S2G4.rda",compress=TRUE)
+  
+  cat ("Process finished! Check your .rda files")
+  
+}
+
+
+convertLogsToJson <- function(rootDir){
+  
+  # Store the current dir, to come back to it at the end, and change wd to the rootDir
+  originalDir <- getwd()
+  setwd(rootDir)
+  
+  cat(paste("Starting pseudo-YAML to JSON conversion of directory",rootDir))
+  
+  logFiles <- list.files(pattern = "\\.yaml$")
+  
+  for(logFile in logFiles){
+    cat(paste("Converting ",logFile,"..."))
+    convertLogToJson(logFile)
+  }
+  
+  cat("Conversion to json finished!")
+  
+  # Go back to the original current dir
+  setwd(originalDir)
+}
+
+
+# convertLogToJson - convert pseudo-yaml log file to JSON for later parsing
+convertLogToJson <- function(inputFile){
+  
+  con  <- file(inputFile, open = "r")
+  
+  while (length(oneLine <- readLines(con, n = 1, warn = FALSE)) > 0) {
+    
+    # We substitute = by :, ; by ,, () by []
+    newstr <- gsub("=",":", x=oneLine)
+    newstr <- gsub(";",",", x=newstr)
+    newstr <- gsub("\\(","[", x=newstr)
+    newstr <- gsub(")","]", x=newstr)
+    newstr <- gsub("([0-9]*)(L)","\\1",x=newstr)
+    newstr <- gsub("taglog : ","", x=newstr)
+    newstr <- gsub("timestamp","\"timestamp\"", x=newstr)
+    newstr <- gsub("tags","\"tags\"", x=newstr)
+    newstr <- gsub("id","\"id\"", x=newstr)
+    newstr <- gsub("corners","\"corners\"", x=newstr)
+    newstr <- gsub("],","]",x=newstr)
+    
+    # We write a new line to the
+    cat(newstr,"\n",file=paste(inputFile,"json",sep="."), sep="", append=TRUE)
+    
+  } 
+  
+  close(con)
+  
+}
+
+
 
 # mergeSplitLogFiles - Merge/Split log files
 # This function takes log files in JSON, loads them in R data frames, takes those times within a certain limit, and splits the tags 
@@ -251,102 +354,3 @@ getQuadrantFromPosition <- function(pos,width,height){
   
 }
 
-
-# preprocessJDCLogs - Clean and organize
-# This is the overall function in charge of the preprocessing and cleaning of the log data from the JDC experiment
-# Parameters: rootDir the directory in which the logs to be merged/split are, in folders called "lamp 1", "lamp 2"...
-preprocessJDCLogs <- function(rootDir,doYAMLConversion=FALSE){
-  
-  cat ("Please ensure that all .log files have ending parentheses so that they are valid pseudo-yaml, and save them as .yaml files. Then press [enter] to continue")
-  line <- readline()
-  
-  # Convert the .yaml files to JSON .json files
-  if(doYAMLConversion){
-    convertLogsToJson(paste(rootDir, "lamp 1", sep="/"))
-    convertLogsToJson(paste(rootDir, "lamp 2", sep="/"))
-    convertLogsToJson(paste(rootDir, "lamp 3", sep="/"))
-    convertLogsToJson(paste(rootDir, "lamp 4", sep="/"))
-    convertLogsToJson(paste(rootDir, "lamp 5", sep="/"))
-  }
-  
-  
-  # We import the groups, start and end times from a csv in the rootDir
-  syncData <- read.csv(paste(rootDir,"ActivityTiming-synchronization.csv", sep="/"), stringsAsFactors=FALSE)
-
-  options(digits.secs = 3)
-
-  # for each group, we get and clean the data
-  for(i in 1:length(syncData$Code)){
-    # We calculate the time limits (for now, based on the expected time slots)
-    start <- as.POSIXct(strptime(syncData$RealStart[i], "%Y-%m-%d %H:%M:%OS"))
-    end <- as.POSIXct(strptime(syncData$RealEnd[i], "%Y-%m-%d %H:%M:%OS"))
-    mergeSplitLogFiles(paste(rootDir, paste("lamp ",as.character(syncData$Lamp..[i]),sep=""), sep="/"),start,end,syncData$Code[i])
-  }
-  
-  #We merge manually the two composite group data, and write it to a file again
-  cat ("Doing manual join of groups fragmented across lamps\n")
-  s2g3a <- get(load('S2G3a.rda')) 
-  s2g3b <- get(load('S2G3b.rda'))
-  totalData <- rbind(s2g3a,s2g3b) 
-  save(totalData,file="S2G3.rda",compress=TRUE)
-
-  # s2g4a <- get(load('S2G4a.rda')) # From this part, we lost the logs!
-  totalData <- get(load('S2G4b.rda'))
-  # totalData <- rbind(s2g4a,s2g4b) 
-  save(totalData,file="S2G4.rda",compress=TRUE)
-  
-  cat ("Process finished! Check your .rda files")
-  
-}
-
-
-convertLogsToJson <- function(rootDir){
-
-  # Store the current dir, to come back to it at the end, and change wd to the rootDir
-  originalDir <- getwd()
-  setwd(rootDir)
-  
-  cat(paste("Starting pseudo-YAML to JSON conversion of directory",rootDir))
-
-  logFiles <- list.files(pattern = "\\.yaml$")
-  
-  for(logFile in logFiles){
-    cat(paste("Converting ",logFile,"..."))
-    convertLogToJson(logFile)
-  }
-  
-  cat("Conversion to json finished!")
-  
-  # Go back to the original current dir
-  setwd(originalDir)
-}
-
-
-# convertLogToJson - convert pseudo-yaml log file to JSON for later parsing
-convertLogToJson <- function(inputFile){
-  
-  con  <- file(inputFile, open = "r")
-  
-  while (length(oneLine <- readLines(con, n = 1, warn = FALSE)) > 0) {
-    
-    # We substitute = by :, ; by ,, () by []
-    newstr <- gsub("=",":", x=oneLine)
-    newstr <- gsub(";",",", x=newstr)
-    newstr <- gsub("\\(","[", x=newstr)
-    newstr <- gsub(")","]", x=newstr)
-    newstr <- gsub("([0-9]*)(L)","\\1",x=newstr)
-    newstr <- gsub("taglog : ","", x=newstr)
-    newstr <- gsub("timestamp","\"timestamp\"", x=newstr)
-    newstr <- gsub("tags","\"tags\"", x=newstr)
-    newstr <- gsub("id","\"id\"", x=newstr)
-    newstr <- gsub("corners","\"corners\"", x=newstr)
-    newstr <- gsub("],","]",x=newstr)
-    
-    # We write a new line to the
-    cat(newstr,"\n",file=paste(inputFile,"json",sep="."), sep="", append=TRUE)
-    
-  } 
-  
-  close(con)
-  
-}
