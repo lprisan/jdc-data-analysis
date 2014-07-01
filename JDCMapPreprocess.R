@@ -23,6 +23,16 @@ preprocessJDCMaps <- function(rootDir){
   data$Proportion.Finished <- (data$Count.Finished/data$Total.Maps)
   names(data)[[1]] <- "Group.Name" # We change the name for the Label column, to Group.Name
   
+  # We load the map timings and stats
+  mapTimes <- read.csv("SessionTimings.csv",stringsAsFactors=FALSE)
+  # We clean up some inconsistencies in the data
+  mapTimes <- as.data.frame(lapply(mapTimes, function(x){replace(x, !is.na(x) & x == "UN", "UNFIN")}),stringsAsFactors=F)
+  mapTimes <- as.data.frame(lapply(mapTimes, function(x){replace(x, !is.na(x) & x == "", NA)}),stringsAsFactors=F)
+  mapTimes[,c(2:31,41:44)] <- lapply(mapTimes[,c(2:31,41:44)],as.numeric)
+  mapTimes[,c(1,32:40)] <- lapply(mapTimes[,c(1,32:40)],as.factor)
+  
+  data <- merge(data,mapTimes,by.x="Group.Name",by.y="Group")
+  
   # save the R data frame
   save(data,file="Maps.rda",compress=TRUE)
   

@@ -12,10 +12,16 @@ JDCExplorations <- function(rootDir="."){
     
   setwd(rootDir)
   rootDir <- getwd() # So that we get the full path
+
+  # We get basic results of map completion by the groups
+  mapdir <- paste(rootDir,"/maps",sep="")
+  setwd(mapdir)
+  mapsData <- get(load("Maps.rda"))
+  # We plot the data from the map completion data (simple graphs)
+#  mapPerformancePlots()
   
   # We get the log data  
   logdir <- paste(rootDir,"/logs",sep="")
-
 #   # Do the samples available, relative usage of representations and helps per group
 #   for(file in list.files(path=logdir,pattern = "\\.rda$")){
 #     logPointsInTime(logdir,file)
@@ -26,24 +32,18 @@ JDCExplorations <- function(rootDir="."){
 #   logHelpGroupUsageInSession(logdir)
   # We get some summaries of the logs, eliminating the temporal component (relative usages of different elements)
   logSummary <- getLogSummaries(logdir)
-  # TODO: get the portions of the logs relative to activity 4 (free choice of elements)
+  # TODO: get the portions of the logs relative to activity 4 (free choice of elements), by crossing it with the map performance/timing data
+  
 
   # We get the questionnaires/surveys data
   questdir <- paste(rootDir,"/quests",sep="")
-
   setwd(questdir)
   surveyData <- get(load("Survey.rda"))
   # We do some basic plots of survey data
-  basicSurveyPlots(surveyData)
+  # basicSurveyPlots(surveyData)
   # We do plots crossing logs (summarized) and survey data, including some cluster analysis
-  logCrossedWithSurveys(logSummary, surveyData)
+  #logCrossedWithSurveys(logSummary, surveyData)
 
-  # We get basic results of map completion by the groups
-  mapdir <- paste(rootDir,"/maps",sep="")
-  setwd(mapdir)
-  mapsData <- get(load("Maps.rda"))
-  # We plot the data from the map completion data
-  mapPerformancePlots()
 
   # We do some other plots crossing element usage (from the logs), map completion and survey responses
   allCrossedDataPlots(logSummary, surveyData, mapsData)
@@ -115,44 +115,45 @@ allCrossedDataPlots <- function(logSummary, surveyData, mapsData){
   boxplot(totalDataComplete$Maps.perTime ~ totalDataComplete$Sequence * totalDataComplete$Session, xlab="Manipulative Sequence and Session", col=(c("lightgoldenrod","lightgreen")))
   dev.off()
   
-  png("Finished.vsTotalMaps.Boxplots.png",width=1280,height=1024)  
-  par(mfrow=c(2,2))
-  boxplot(totalDataComplete$Proportion.Finished, main="Maps completed / Total Maps tried")
-  boxplot(totalDataComplete$Proportion.Finished ~ totalDataComplete$Sequence, main="Maps completed / Total Maps tried", xlab="Manipulative Sequence", col=(c("lightgoldenrod","lightgreen")))
-  boxplot(totalDataComplete$Proportion.Finished ~ totalDataComplete$Session, main="Maps completed / Total Maps tried", xlab="Session")
-  boxplot(totalDataComplete$Proportion.Finished ~ totalDataComplete$Sequence * totalDataComplete$Session, xlab="Manipulative Sequence and Session", col=(c("lightgoldenrod","lightgreen")))
-  dev.off()
+#   # The % of maps finished is not so interesting, we ditch it for now
+#   png("Finished.vsTotalMaps.Boxplots.png",width=1280,height=1024)  
+#   par(mfrow=c(2,2))
+#   boxplot(totalDataComplete$Proportion.Finished, main="Maps completed / Total Maps tried")
+#   boxplot(totalDataComplete$Proportion.Finished ~ totalDataComplete$Sequence, main="Maps completed / Total Maps tried", xlab="Manipulative Sequence", col=(c("lightgoldenrod","lightgreen")))
+#   boxplot(totalDataComplete$Proportion.Finished ~ totalDataComplete$Session, main="Maps completed / Total Maps tried", xlab="Session")
+#   boxplot(totalDataComplete$Proportion.Finished ~ totalDataComplete$Sequence * totalDataComplete$Session, xlab="Manipulative Sequence and Session", col=(c("lightgoldenrod","lightgreen")))
+#   dev.off()
 
-  png("Finished.Cont.Disc.Ratio.Scatterplots.png",width=1280,height=768)  
+  png("Total.Finished.Cont.Disc.Ratio.Scatterplots.png",width=1280,height=768)  
   p1 <- ggplot(totalDataComplete, aes(x=log10(Cont.Disc.Ratio), y=Maps.perTime)) + geom_smooth(method="lm") +
-    geom_point(size=5,alpha=0.4) + ggtitle("Maps completed / Time vs. Ratio Cont/Discr usage")
-  p2 <- ggplot(totalDataComplete, aes(x=log10(Cont.Disc.Ratio), y=Proportion.Finished)) + geom_smooth(method="lm") +
-    geom_point(size=5,alpha=0.4) + ggtitle("Ratio of maps completed vs. Ratio Cont/Discr usage")
+    geom_point(size=5,alpha=0.4) + ggtitle("Total Maps completed / Time vs. Ratio Cont/Discr usage")
+#   p2 <- ggplot(totalDataComplete, aes(x=log10(Cont.Disc.Ratio), y=Proportion.Finished)) + geom_smooth(method="lm") +
+#     geom_point(size=5,alpha=0.4) + ggtitle("Ratio of maps completed vs. Ratio Cont/Discr usage")
   p3 <- ggplot(totalDataComplete, aes(x=log10(Cont.Disc.Ratio), y=Maps.perTime, colour=Sequence)) + 
-    geom_point(size=5,alpha=0.4) + ggtitle("Maps completed / Time vs. Ratio Cont/Discr usage")
-  p4 <- ggplot(totalDataComplete, aes(x=log10(Cont.Disc.Ratio), y=Proportion.Finished, colour=Sequence)) + 
-    geom_point(size=5,alpha=0.4) + ggtitle("Ratio of maps completed vs. Ratio Cont/Discr usage")
+    geom_point(size=5,alpha=0.4) + ggtitle("Total Maps completed / Time vs. Ratio Cont/Discr usage")
+#   p4 <- ggplot(totalDataComplete, aes(x=log10(Cont.Disc.Ratio), y=Proportion.Finished, colour=Sequence)) + 
+#     geom_point(size=5,alpha=0.4) + ggtitle("Ratio of maps completed vs. Ratio Cont/Discr usage")
   p5 <- ggplot(totalDataComplete, aes(x=log10(Cont.Disc.Ratio), y=Maps.perTime, colour=Session)) + 
-    geom_point(size=5,alpha=0.4) + ggtitle("Maps completed / Time vs. Ratio Cont/Discr usage")
-  p6 <- ggplot(totalDataComplete, aes(x=log10(Cont.Disc.Ratio), y=Proportion.Finished, colour=Session)) + 
-    geom_point(size=5,alpha=0.4) + ggtitle("Ratio of maps completed vs. Ratio Cont/Discr usage")
-  multiplot(p1, p2, p3, p4, p5, p6, cols=3)
+    geom_point(size=5,alpha=0.4) + ggtitle("Total Maps completed / Time vs. Ratio Cont/Discr usage")
+#   p6 <- ggplot(totalDataComplete, aes(x=log10(Cont.Disc.Ratio), y=Proportion.Finished, colour=Session)) + 
+#     geom_point(size=5,alpha=0.4) + ggtitle("Ratio of maps completed vs. Ratio Cont/Discr usage")
+  multiplot(p1, p3, p5, cols=3)
   dev.off()
   
-  png("Finished.Frac.Usage.Scatterplots.png",width=1280,height=768)  
+  png("Total.Finished.Frac.Usage.Scatterplots.png",width=1280,height=768)  
   p1 <- ggplot(totalDataComplete, aes(x=Relative.Using.Frac, y=Maps.perTime)) + geom_smooth(method="lm") +
     geom_point(size=5,alpha=0.4) + ggtitle("Maps completed / Time vs. Abstract fraction usage")
-  p2 <- ggplot(totalDataComplete, aes(x=Relative.Using.Frac, y=Proportion.Finished)) + geom_smooth(method="lm") +
-    geom_point(size=5,alpha=0.4) + ggtitle("Ratio of maps completed vs. Abstract fraction usage")
+#   p2 <- ggplot(totalDataComplete, aes(x=Relative.Using.Frac, y=Proportion.Finished)) + geom_smooth(method="lm") +
+#     geom_point(size=5,alpha=0.4) + ggtitle("Ratio of maps completed vs. Abstract fraction usage")
   p3 <- ggplot(totalDataComplete, aes(x=Relative.Using.Frac, y=Maps.perTime, colour=Sequence)) + 
     geom_point(size=5,alpha=0.4) + ggtitle("Maps completed / Time vs. Abstract fraction usage")
-  p4 <- ggplot(totalDataComplete, aes(x=Relative.Using.Frac, y=Proportion.Finished, colour=Sequence)) + 
-    geom_point(size=5,alpha=0.4) + ggtitle("Ratio of maps completed vs. Abstract fraction usage")
+#   p4 <- ggplot(totalDataComplete, aes(x=Relative.Using.Frac, y=Proportion.Finished, colour=Sequence)) + 
+#     geom_point(size=5,alpha=0.4) + ggtitle("Ratio of maps completed vs. Abstract fraction usage")
   p5 <- ggplot(totalDataComplete, aes(x=Relative.Using.Frac, y=Maps.perTime, colour=Session)) + 
     geom_point(size=5,alpha=0.4) + ggtitle("Maps completed / Time vs. Abstract fraction usage")
-  p6 <- ggplot(totalDataComplete, aes(x=Relative.Using.Frac, y=Proportion.Finished, colour=Session)) + 
-    geom_point(size=5,alpha=0.4) + ggtitle("Ratio of maps completed vs. Abstract fraction usage")
-  multiplot(p1, p2, p3, p4, p5, p6, cols=3)
+#   p6 <- ggplot(totalDataComplete, aes(x=Relative.Using.Frac, y=Proportion.Finished, colour=Session)) + 
+#     geom_point(size=5,alpha=0.4) + ggtitle("Ratio of maps completed vs. Abstract fraction usage")
+  multiplot(p1, p3, p5, cols=3)
   dev.off()
   
   
