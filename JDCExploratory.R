@@ -30,10 +30,9 @@ JDCExplorations <- function(rootDir="."){
 #   # Do a multi-graph panel for the temporal evolution of usage of each kind of card and each group, for a session
 #   logManipulativeGroupUsageInSession(logdir)
 #   logHelpGroupUsageInSession(logdir)
-  # We get some summaries of the logs, eliminating the temporal component (relative usages of different elements)
-  logSummary <- getLogSummaries(logdir)
-  # TODO: get the portions of the logs relative to activity 4 (free choice of elements), by crossing it with the map performance/timing data
-  
+  # We get some summaries of the logs, eliminating most of the temporal component (relative usages of different elements)
+  # logSummary <- getLogSummaries(logdir)
+  logSummary <- getLogSummariesInclAct4(logdir,mapsData)  
 
   # We get the questionnaires/surveys data
   questdir <- paste(rootDir,"/quests",sep="")
@@ -58,6 +57,22 @@ JDCExplorations <- function(rootDir="."){
   # We go back to the original directory
   setwd(originalDir)
 }
+
+
+
+getLogSummariesInclAct4 <- function(logdir,mapsData){
+  
+  # We get the basic, overall summaries
+  logSummary <- getLogSummaries(logdir)
+  
+  # We merge the summary with the map data, in order to get the subset of groups for which we have meaningful map performance data
+  mergedData <- merge(mapsData,logSummary,by="Group.Name")
+  mergedData <- mergedData[!is.na(mergedData$A4_D),]
+  cat("Waiting...")
+  
+}
+
+
 
 # This function receives a data frame with eyetracking events (pupil diameter), and it
 # draws basic line plots regarding their evolution over time (using a sliding window)
@@ -189,6 +204,7 @@ getLogSummaries <- function(rootDir){
   Relative.Help.Disc = numeric(length(files))
   Relative.Help.Dec = numeric(length(files))
   Relative.Help.Frac = numeric(length(files))
+  Log.Start = numeric(length(files))
   
   for(i in 1:length(files)){
     data <- get(load(files[i]))
@@ -213,6 +229,7 @@ getLogSummaries <- function(rootDir){
     Relative.Help.Disc[i] <- Help.Disc[i]/Total.Samples[i]
     Relative.Help.Dec[i] <- Help.Dec[i]/Total.Samples[i]
     Relative.Help.Frac[i] <- Help.Frac[i]/Total.Samples[i]    
+    Log.Start[i] <- min(data$timestamp)
   }
   
   # the log data summary for each group
@@ -234,7 +251,8 @@ getLogSummaries <- function(rootDir){
                            Relative.Help.Rect,
                            Relative.Help.Disc,
                            Relative.Help.Dec,
-                           Relative.Help.Frac)
+                           Relative.Help.Frac,
+                           Log.Start)
 
   logSummary
 }
