@@ -32,7 +32,7 @@ JDCExplorations <- function(rootDir="."){
 #   logHelpGroupUsageInSession(logdir)
   # We get some summaries of the logs, eliminating most of the temporal component (relative usages of different elements)
   # logSummary <- getLogSummaries(logdir)
-  logSummary <- getLogSummariesInclAct4(logdir,mapsData)  
+  logMapSummary <- getLogSummariesInclAct4(logdir,mapsData)  #
 
   # We get the questionnaires/surveys data
   questdir <- paste(rootDir,"/quests",sep="")
@@ -45,7 +45,7 @@ JDCExplorations <- function(rootDir="."){
 
 
   # We do some other plots crossing element usage (from the logs), map completion and survey responses
-  allCrossedDataPlots(logSummary, surveyData, mapsData)
+  allCrossedDataPlots(logMapSummary, surveyData)
   
   # We get the teacher's eyetracking data
   eyedir <- paste(rootDir,"/eyetrack",sep="")
@@ -65,13 +65,101 @@ getLogSummariesInclAct4 <- function(logdir,mapsData){
   # We get the basic, overall summaries
   logSummary <- getLogSummaries(logdir)
   
-  # We merge the summary with the map data, in order to get the subset of groups for which we have meaningful map performance data
-  mergedData <- merge(mapsData,logSummary,by="Group.Name")
-  mergedData <- mergedData[!is.na(mergedData$A4_D),]
-  cat("Waiting...")
+  # We merge the summary with the map data
+  mergedData <- merge(mapsData,logSummary,by="Group.Name",all=TRUE)
+  # We get the subset of groups for which we have meaningful map performance data
+  completeData <- mergedData[!is.na(mergedData$A4_D),]
+
+  # Since the logs and video coding may have discrepancies in the values for the duration of the activities,
+  # we approximate it by projecting the video-based durations (A1_S, A4_E) into the range of the logs we have
+  # (Log.Start, Total.Duration), and we get the equivalence of Activity 4 limits in log timestamps 
+  completeData$Approx.Act4.Duration <- ((completeData$A4_E - completeData$A4_S)*completeData$Total.Duration)/(completeData$A4_E - completeData$A1_S)
+  completeData$Approx.Act4.Start <- (completeData$Log.Start+completeData$Total.Duration-completeData$Approx.Act4.Duration)
+  completeData$Approx.Act4.End <- (completeData$Log.Start+completeData$Total.Duration)
+  # We get the usage statistics taking into account only (approximate) Activity 4 time
+  completeData <- getRangedLogSummaries(logdir,completeData,completeData$Approx.Act4.Start,completeData$Approx.Act4.End)
   
+  # We merge back the additional Act4 data with the log summary
+  data <- merge(mergedData,completeData,all=TRUE)
+  data
 }
 
+
+getRangedLogSummaries <- function(logdir, globaldata, starts, ends){
+  
+  setwd(logdir)
+  
+  num_groups <- length(globaldata$Group.Name)
+  
+  # We pre-create the vectors for the different metrics we're going to calculate
+  Using.Cont.Act4 = numeric(num_groups)
+  Using.Disc.Act4 = numeric(num_groups)
+  Using.Frac.Act4 = numeric(num_groups)
+  Help.Circ.Act4 = numeric(num_groups)
+  Help.Rect.Act4 = numeric(num_groups)
+  Help.Disc.Act4 = numeric(num_groups)
+  Help.Dec.Act4 = numeric(num_groups)
+  Help.Frac.Act4 = numeric(num_groups)
+  Relative.Using.Cont.Act4 = numeric(num_groups)
+  Relative.Using.Disc.Act4 = numeric(num_groups)
+  Relative.Using.Frac.Act4 = numeric(num_groups)
+  Relative.Help.Circ.Act4 = numeric(num_groups)
+  Relative.Help.Rect.Act4 = numeric(num_groups)
+  Relative.Help.Disc.Act4 = numeric(num_groups)
+  Relative.Help.Dec.Act4 = numeric(num_groups)
+  Relative.Help.Frac.Act4 = numeric(num_groups)
+  
+  for(i in 1:num_groups){
+    # We open the file for each group
+    data <- get(load(paste(globaldata$Group.Name[[i]],".rda",sep="")))
+    # We subset the range of timestamps that we need the stats for
+    data <- data[(data$timestamp>=starts[i] & data$timestamp<=ends[i]),]
+    data <- addElementUsageVariables(data)
+    
+    Using.Cont.Act4[i] <- sum(data$UsingCont)
+    Using.Disc.Act4[i] <- sum(data$UsingDisc)
+    Using.Frac.Act4[i] <- sum(data$UsingFrac)
+    Help.Circ.Act4[i] <- sum(data$HelpContCirc)
+    Help.Rect.Act4[i] <- sum(data$HelpContRect)
+    Help.Disc.Act4[i] <- sum(data$HelpDiscrete)
+    Help.Dec.Act4[i] <- sum(data$HelpDecimal)
+    Help.Frac.Act4[i] <- sum(data$HelpFraction)
+    
+    num_samples <- length(data$timestamp)
+    
+    Relative.Using.Cont.Act4[i] <- Using.Cont.Act4[i]/num_samples
+    Relative.Using.Disc.Act4[i] <- Using.Disc.Act4[i]/num_samples
+    Relative.Using.Frac.Act4[i] <- Using.Frac.Act4[i]/num_samples
+    Relative.Help.Circ.Act4[i] <- Help.Circ.Act4[i]/num_samples
+    Relative.Help.Rect.Act4[i] <- Help.Rect.Act4[i]/num_samples
+    Relative.Help.Disc.Act4[i] <- Help.Disc.Act4[i]/num_samples
+    Relative.Help.Dec.Act4[i] <- Help.Dec.Act4[i]/num_samples
+    Relative.Help.Frac.Act4[i] <- Help.Frac.Act4[i]/num_samples
+  }
+  
+  # the log data summary for each group
+  logSummary <- cbind(globaldata, 
+                           Using.Cont.Act4,
+                           Using.Disc.Act4,
+                           Using.Frac.Act4,
+                           Help.Circ.Act4,
+                           Help.Rect.Act4,
+                           Help.Disc.Act4,
+                           Help.Dec.Act4,
+                           Help.Frac.Act4,
+                           Relative.Using.Cont.Act4,
+                           Relative.Using.Disc.Act4,
+                           Relative.Using.Frac.Act4,
+                           Relative.Help.Circ.Act4,
+                           Relative.Help.Rect.Act4,
+                           Relative.Help.Disc.Act4,
+                           Relative.Help.Dec.Act4,
+                           Relative.Help.Frac.Act4)
+  
+  logSummary
+  
+  
+}
 
 
 # This function receives a data frame with eyetracking events (pupil diameter), and it
@@ -107,20 +195,21 @@ eyetrackerPlots <- function(data, window=1000, slide=10){
 
 # This function gets as input the data from all our sources (logs, surveys, 
 # video coding of maps completed) and plots a few  crossings between them
-allCrossedDataPlots <- function(logSummary, surveyData, mapsData){
+allCrossedDataPlots <- function(logMapSummary, surveyData){
   
   # We create a summary/average of the survey data by group
   surveySummary <- getSurveySummary(surveyData)
   
-  # Same thing, but only with the complete rows, no NAs
-  totalDataComplete <- merge(x=surveySummary,y=logSummary,by.x="Group.Name",by.y="Group.Name")
+  # We merge the log-map and survey data
+  totalDataComplete <- merge(x=surveySummary,y=logMapSummary,by.x="Group.Name",by.y="Group.Name",all=TRUE)
   totalDataComplete$Session <- as.factor(totalDataComplete$Session)
   totalDataComplete$Cont.Disc.Ratio <- totalDataComplete$Relative.Using.Cont/totalDataComplete$Relative.Using.Disc
-  
-  totalDataComplete <- merge(x=totalDataComplete,y=mapsData)
-  
+  totalDataComplete$Cont.Disc.Ratio.Act4 <- totalDataComplete$Relative.Using.Cont.Act4/totalDataComplete$Relative.Using.Disc.Act4
   # We calculate the maps finished (from the video analysis) vs the total time spent doing maps (in minutes, from the logs)
   totalDataComplete$Maps.perTime <- totalDataComplete$Count.Finished/(totalDataComplete$Total.Duration/60000)
+  
+  
+  # TODO: Review-redo this!!!!
   
   png("Finished.perTime.Boxplots.png",width=1280,height=1024)  
   par(mfrow=c(2,2))

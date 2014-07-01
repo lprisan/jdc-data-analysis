@@ -31,6 +31,10 @@ preprocessJDCMaps <- function(rootDir){
   mapTimes[,c(2:31,41:44)] <- lapply(mapTimes[,c(2:31,41:44)],as.numeric)
   mapTimes[,c(1,32:40)] <- lapply(mapTimes[,c(1,32:40)],as.factor)
   
+  # calculate the number of finished and unfinished maps in Act4
+  mapTimes <- addAct4Performance(mapTimes)
+  
+  # We merge the total summary data with this more detailed map performance data
   data <- merge(data,mapTimes,by.x="Group.Name",by.y="Group")
   
   # save the R data frame
@@ -38,4 +42,16 @@ preprocessJDCMaps <- function(rootDir){
   
   # Go back to original dir
   setwd(original)
+}
+
+addAct4Performance <- function(mapTimes){
+  # TODO: calculate the number of finished and unfinished maps in Act4
+  
+  mapTimes$Act4.Finished.Maps <- as.numeric(!is.na(mapTimes$M9_ST) & mapTimes$M9_ST=="FIN") + as.numeric(!is.na(mapTimes$M10_ST) & mapTimes$M10_ST=="FIN")
+  mapTimes$Act4.Unfinished.Maps <- as.numeric(!is.na(mapTimes$M9_ST) & mapTimes$M9_ST=="UNFIN") + as.numeric(!is.na(mapTimes$M10_ST) & mapTimes$M10_ST=="UNFIN")
+  
+  # For those groups that do not have an Act4 duration, we set the performance to NA
+  mapTimes[is.na(mapTimes$A4_D),c("Act4.Unfinished.Maps","Act4.Finished.Maps")] <- NA
+    
+  mapTimes
 }
