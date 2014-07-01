@@ -49,3 +49,4 @@ Per session:
 * `*.hint.usage.png`: temporal sequence of the usage of the different hint types, for each of the groups in a session
 * `*.manip.usage.png`: temporal sequence of the usage of the different kinds of manipulatives, for each of the groups in a session
 
+hello
