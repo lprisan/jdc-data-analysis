@@ -165,13 +165,16 @@ getRangedLogSummaries <- function(logdir, globaldata, starts, ends){
 # This function receives a data frame with eyetracking events (pupil diameter), and it
 # draws basic line plots regarding their evolution over time (using a sliding window)
 # Currently, calculates mean and standard deviation over the defined windows
-eyetrackerPlots <- function(data, window=1000, slide=10){
+# The default window size is 10s (300 samples), with 10 samples window slide
+eyetrackerPlots <- function(data, window=300, slide=10){
   
   # We split each session's data, and put it into a list
   data$Session <- as.factor(data$Session)
   sessionsdata <- split(data,data$Session)
   
   # We make a sliding window mean of the data
+  # TODO: add the timestamp of the middle of each window, for later browsing 
+  # TODO: check out the periods where both std and mean are over the average??
   for(i in 1:length(sessionsdata)){
     png(paste("Session",sessionsdata[[i]]$Session[[1]],".Pupil.Diameter.",window,"samples.slide",slide,".png",sep=""),width=1280,height=1024)  
     par(mfcol=c(2,1))
@@ -208,9 +211,10 @@ allCrossedDataPlots <- function(logMapSummary, surveyData){
   # We calculate the maps finished (from the video analysis) vs the total time spent doing maps (in minutes, from the logs)
   totalDataComplete$Maps.perTime <- totalDataComplete$Count.Finished/(totalDataComplete$Total.Duration/60000)
   
+  totalDataComplete <- addPerformanceCluster(totalDataComplete)
   
-  # TODO: Review-redo this!!!!
   
+  # Boxplots about maps finished per unit of time, by sequence, and session
   png("Finished.perTime.Boxplots.png",width=1280,height=1024)  
   par(mfrow=c(2,2))
   boxplot(totalDataComplete$Maps.perTime, main="Maps completed / Total Time")
@@ -218,15 +222,136 @@ allCrossedDataPlots <- function(logMapSummary, surveyData){
   boxplot(totalDataComplete$Maps.perTime ~ totalDataComplete$Session, main="Maps completed / Total Time", xlab="Session")
   boxplot(totalDataComplete$Maps.perTime ~ totalDataComplete$Sequence * totalDataComplete$Session, xlab="Manipulative Sequence and Session", col=(c("lightgoldenrod","lightgreen")))
   dev.off()
+
+
+  # Scatterplots about maps completed per time, representation types used and preferences
+  png("Finished.perTime.Representation.png",width=1280,height=1024)  
+  p1 <- ggplot(totalDataComplete, aes(x=Q3.Continuous.Repr, y=Maps.perTime)) + 
+    ggtitle("Maps finished vs. Preference for continuous") + 
+    geom_point(size=5,alpha=0.4,aes(colour=Sequence)) + geom_smooth(method="lm") + theme(legend.position="bottom")
+  p2 <- ggplot(totalDataComplete, aes(x=(6-Q3.Continuous.Repr), y=Maps.perTime)) + 
+    ggtitle("Maps finished vs. Preference for discrete") + 
+    geom_point(size=5,alpha=0.4,aes(colour=Sequence)) + geom_smooth(method="lm") + theme(legend.position="bottom")
+  p3 <- ggplot(totalDataComplete, aes(x=(6-Q2.Concrete.Repr), y=Maps.perTime)) + 
+    ggtitle("Maps finished vs. Preference for symbolic") + 
+    geom_point(size=5,alpha=0.4,aes(colour=Sequence)) + geom_smooth(method="lm") + theme(legend.position="bottom")
   
-#   # The % of maps finished is not so interesting, we ditch it for now
-#   png("Finished.vsTotalMaps.Boxplots.png",width=1280,height=1024)  
-#   par(mfrow=c(2,2))
-#   boxplot(totalDataComplete$Proportion.Finished, main="Maps completed / Total Maps tried")
-#   boxplot(totalDataComplete$Proportion.Finished ~ totalDataComplete$Sequence, main="Maps completed / Total Maps tried", xlab="Manipulative Sequence", col=(c("lightgoldenrod","lightgreen")))
-#   boxplot(totalDataComplete$Proportion.Finished ~ totalDataComplete$Session, main="Maps completed / Total Maps tried", xlab="Session")
-#   boxplot(totalDataComplete$Proportion.Finished ~ totalDataComplete$Sequence * totalDataComplete$Session, xlab="Manipulative Sequence and Session", col=(c("lightgoldenrod","lightgreen")))
+  p4 <- ggplot(totalDataComplete, aes(x=Relative.Using.Cont.Act4, y=Maps.perTime)) + 
+    ggtitle("Maps finished vs. Usage of continuous") + 
+    geom_point(size=5,alpha=0.4,aes(colour=Sequence)) + geom_smooth(method="lm") + theme(legend.position="bottom")
+  p5 <- ggplot(totalDataComplete, aes(x=Relative.Using.Disc.Act4, y=Maps.perTime)) + 
+    ggtitle("Maps finished vs. Usage of discrete") + 
+    geom_point(size=5,alpha=0.4,aes(colour=Sequence)) + geom_smooth(method="lm") + theme(legend.position="bottom")
+  p6 <- ggplot(totalDataComplete, aes(x=Relative.Using.Frac.Act4, y=Maps.perTime)) + 
+    ggtitle("Maps finished vs. Usage of symbolic") + 
+    geom_point(size=5,alpha=0.4,aes(colour=Sequence)) + geom_smooth(method="lm") + theme(legend.position="bottom")
+  
+  p7 <- ggplot(totalDataComplete, aes(x=(Relative.Help.Circ.Act4+Relative.Help.Rect.Act4), y=Maps.perTime)) + 
+    ggtitle("Maps finished vs. Usage of continuous hints") + 
+    geom_point(size=5,alpha=0.4,aes(colour=Sequence)) + geom_smooth(method="lm") + theme(legend.position="bottom")
+  p8 <- ggplot(totalDataComplete, aes(x=Relative.Help.Disc.Act4, y=Maps.perTime)) + 
+    ggtitle("Maps finished vs. Usage of discrete hints") + 
+    geom_point(size=5,alpha=0.4,aes(colour=Sequence)) + geom_smooth(method="lm") + theme(legend.position="bottom")
+  p9 <- ggplot(totalDataComplete, aes(x=(Relative.Help.Frac.Act4+Relative.Help.Dec.Act4), y=Maps.perTime)) + 
+    ggtitle("Maps finished vs. Usage of symbolic hints") + 
+    geom_point(size=5,alpha=0.4,aes(colour=Sequence)) + geom_smooth(method="lm") + theme(legend.position="bottom")
+
+  p10 <- ggplot(totalDataComplete, aes(x=Relative.Using.Cont.Act4, y=Q3.Continuous.Repr)) + 
+    ggtitle("Continuous preference vs. cont. manip. usage") + 
+    geom_point(size=5,alpha=0.4,aes(colour=Sequence)) + geom_smooth(method="lm") + theme(legend.position="bottom")
+  p11 <- ggplot(totalDataComplete, aes(x=Relative.Using.Disc.Act4, y=(6-Q3.Continuous.Repr))) + 
+    ggtitle("Discrete preference vs. discr. manip. usage") + 
+    geom_point(size=5,alpha=0.4,aes(colour=Sequence)) + geom_smooth(method="lm") + theme(legend.position="bottom")
+  p12 <- ggplot(totalDataComplete, aes(x=Relative.Using.Frac.Act4, y=(6-Q2.Concrete.Repr))) + 
+    ggtitle("Symbolic preference and symb. manip. usage") + 
+    geom_point(size=5,alpha=0.4,aes(colour=Sequence)) + geom_smooth(method="lm") + theme(legend.position="bottom")
+  
+  p13 <- ggplot(totalDataComplete, aes(x=(Relative.Help.Circ.Act4+Relative.Help.Rect.Act4), y=Q3.Continuous.Repr)) + 
+    ggtitle("Continuous preference vs. cont. hint usage") + 
+    geom_point(size=5,alpha=0.4,aes(colour=Sequence)) + geom_smooth(method="lm") + theme(legend.position="bottom")
+  p14 <- ggplot(totalDataComplete, aes(x=Relative.Help.Disc.Act4, y=(6-Q3.Continuous.Repr))) + 
+    ggtitle("Discrete preference vs. disc. hint usage") + 
+    geom_point(size=5,alpha=0.4,aes(colour=Sequence)) + geom_smooth(method="lm") + theme(legend.position="bottom")
+  p15 <- ggplot(totalDataComplete, aes(x=(Relative.Help.Frac.Act4+Relative.Help.Dec.Act4), y=(6-Q2.Concrete.Repr))) + 
+    ggtitle("Symbolic preference vs. symb. hint usage") + 
+    geom_point(size=5,alpha=0.4,aes(colour=Sequence)) + geom_smooth(method="lm") + theme(legend.position="bottom")
+  
+  multiplot(p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14, p15, cols=5)
+  dev.off()
+  
+  
+  # Get the cluster centers for the different parameters
+  # aggregate(totalDataComplete,by=list(totalDataComplete$Performance.Cluster),FUN=mean)
+  # TODO: Find a way to make the non-clustered values appear, or maybe show the separation by the other performance metrics
+  png("Performance.Cluster.Scatterplots.png",width=1280,height=768)  
+  p1 <- ggplot(totalDataComplete, aes(x=as.factor(Performance.Cluster), y=Maps.perTime)) + 
+    ggtitle("Maps/Time by cluster") + 
+    geom_point(size=5,alpha=0.4,aes(colour=Sequence)) + theme(legend.position="bottom")
+  p2 <- ggplot(totalDataComplete, aes(x=Q3.Continuous.Repr, y=Maps.perTime)) + 
+    ggtitle("Maps/Time vs Continuous preference") + 
+    geom_point(size=5,alpha=0.4,aes(colour=as.factor(Performance.Cluster))) + theme(legend.position="bottom") + scale_colour_brewer(palette="Paired")
+  p3 <- ggplot(totalDataComplete, aes(x=Relative.Using.Frac.Act4, y=Maps.perTime)) + 
+    ggtitle("Maps/Time vs Usage of fractions during free choice") + 
+    geom_point(size=5,alpha=0.4,aes(colour=as.factor(Performance.Cluster))) + theme(legend.position="bottom") + scale_colour_brewer(palette="Paired")
+  multiplot(p1, p2, p3, cols=3)
+  dev.off()
+
+  # We plot a hierarchical clustering of data
+  # We select only the sequence, (group averaged) survey questions, performance metrics (with all the data)
+  totalMatrix <- data.matrix(na.omit(totalDataComplete[,c("Sequence","Q1.More.Fun","Q2.Concrete.Repr","Q3.Continuous.Repr",
+                                                  "Mentions.Fractions","Gets.Mechanic","Maps.perTime")]))
+  # We get we add the Act4 performance and usage, thus with n=9
+  totalMatrixComplete <- data.matrix(na.omit(totalDataComplete[,c("Sequence","Q1.More.Fun","Q2.Concrete.Repr","Q3.Continuous.Repr",
+                                                          "Mentions.Fractions","Gets.Mechanic","Act4.Finished.Maps","Maps.perTime",
+                                                          "Relative.Using.Cont.Act4","Relative.Using.Disc.Act4","Relative.Using.Frac.Act4",
+                                                          "Relative.Help.Circ.Act4","Relative.Help.Rect.Act4","Relative.Help.Disc.Act4","Relative.Help.Dec.Act4","Relative.Help.Frac.Act4")]))
+#   
+#   hc <- hclust(dist(totalMatrixComplete)) 
+#   png("Hierarchical.Dendrogram.16feats.png",width=1280,height=1024)
+#   par(mfrow=c(1,1))
+#   myplclust(hc,lab=totalDataComplete$Group.Name,lab.col=unclass(totalDataComplete$Sequence),main="Cluster Dendrogram (sequence, survey, performance, act4 usage stats)")
+#   #plot(hc)
 #   dev.off()
+  
+  # TODO: Add to the dendrogram labels the number and percentage of finished maps??
+  
+  # We do SVD
+  png("Singular.Vector.Decomposition.Contributors.AllGroups.png",width=1280,height=1024)
+  getSvdMostInfluential(totalMatrix, 
+                        quantile=.8, 
+                        similarity_threshold = .9,
+                        plot_threshold = .05,
+                        plot_selection = TRUE)
+  dev.off()
+  
+  png("Singular.Vector.Decomposition.Contributors.Act4Groups.png",width=1280,height=1024)
+  getSvdMostInfluential(totalMatrixComplete, 
+                        quantile=.8, 
+                        similarity_threshold = .9,
+                        plot_threshold = .05,
+                        plot_selection = TRUE)
+  dev.off()
+
+  
+# Basic boxplots of the survey data, total and separated by sequence
+png("Q1.Boxplot.png",width=1280,height=1024)  
+par(mfrow=c(1,1))
+boxplot(totalDataComplete$Q1.More.Fun, ylim=c(1,5), main="Q1", sub="I prefer this way to what we do at school", xlab="Total")
+dev.off()
+
+png("Q2.Q3.Boxplot.Sequence.Session.Cluster.png",width=1280,height=1024)  
+par(mfrow=c(2,3),cex.axis=0.75)
+boxplot(totalDataComplete$Q2.Concrete.Repr ~ totalDataComplete$Sequence, ylim=c(1,5), main="Q2", xlab="Manipulative Sequence", col=(c("lightgoldenrod","lightgreen")))
+boxplot(totalDataComplete$Q2.Concrete.Repr ~ totalDataComplete$Sequence * totalDataComplete$Session, ylim=c(1,5), sub="I prefer concrete representations to abstract/numerical", xlab="Manipulative Sequence and Session", col=(c("lightgoldenrod","lightgreen")))
+boxplot(totalDataComplete$Q2.Concrete.Repr ~ totalDataComplete$Performance.Cluster, ylim=c(1,5), main="Q2", xlab="Performance cluster", col=(c("red","blue")))
+
+boxplot(totalDataComplete$Q3.Continuous.Repr ~ totalDataComplete$Sequence, ylim=c(1,5), main="Q3", xlab="Manipulative Sequence", col=(c("lightgoldenrod","lightgreen")))
+boxplot(totalDataComplete$Q3.Continuous.Repr ~ totalDataComplete$Sequence * totalDataComplete$Session, ylim=c(1,5), sub="I prefer continuous tangibles to tokens", xlab="Manipulative Sequence and Session", col=(c("lightgoldenrod","lightgreen")))
+boxplot(totalDataComplete$Q3.Continuous.Repr ~ totalDataComplete$Performance.Cluster, ylim=c(1,5), main="Q3", xlab="Performance cluster", col=(c("red","blue")))
+dev.off()
+
+
+
 
   png("Total.Finished.Cont.Disc.Ratio.Scatterplots.png",width=1280,height=768)  
   p1 <- ggplot(totalDataComplete, aes(x=log10(Cont.Disc.Ratio), y=Maps.perTime)) + geom_smooth(method="lm") +
@@ -260,6 +385,27 @@ allCrossedDataPlots <- function(logMapSummary, surveyData){
   multiplot(p1, p3, p5, cols=3)
   dev.off()
   
+  
+}
+
+
+addPerformanceCluster <- function(data){
+  
+  perf <- data[,c("Group.Name","Maps.perTime","Mentions.Fractions","Gets.Mechanic","Act4.Finished.Maps")]
+  scaledData <- scale(na.omit(perf[,-1]))
+  fit <- kmeans(scaledData,2,nstart=100)
+  perf <- data.frame(na.omit(perf),Performance.Cluster=fit$cluster)
+  
+  data <- merge(data,perf,all=TRUE)
+  
+  # We create a factor with correct labels for the clusters, using the maps per time which is one of the main defining factors
+  if(mean(data[!is.na(data$Performance.Cluster) & data$Performance.Cluster==1,"Maps.perTime"])>mean(data[!is.na(data$Performance.Cluster) & data$Performance.Cluster==2,"Maps.perTime"])){ # 1 is the high performance cluster
+    data$Performance.Cluster <- factor(data$Performance.Cluster,levels=c("1","2"),labels=c("HiPerf","LoPerf"),exclude=NULL)
+  } else { # 1 is the low performance
+    data$Performance.Cluster <- factor(data$Performance.Cluster,levels=c("1","2"),labels=c("LoPerf","HiPerf"),exclude=NULL)
+  }
+  
+  data
   
 }
 
@@ -393,7 +539,9 @@ getSurveySummary <- function(surveyData){
   surveySummary$Q1.More.Fun <- (aggregate(Q1.More.Fun~Group.Number, data=surveyData, mean))$Q1.More.Fun
   surveySummary$Q2.Concrete.Repr <- (aggregate(Q2.Concrete.Repr~Group.Number, data=surveyData, mean))$Q2.Concrete.Repr
   surveySummary$Q3.Continuous.Repr <- (aggregate(Q3.Continuous.Repr~Group.Number, data=surveyData, mean))$Q3.Continuous.Repr
-
+  surveySummary$Mentions.Fractions <- (aggregate(Mentions.Fractions~Group.Number, data=surveyData, unique))$Mentions.Fractions
+  surveySummary$Gets.Mechanic <- (aggregate(Gets.Mechanic~Group.Number, data=surveyData, unique))$Gets.Mechanic
+  
   surveySummary
 }
 
