@@ -59,7 +59,8 @@ JDCExplorations <- function(rootDir="."){
 }
 
 
-
+# This function returns a data frame with a summary of the Log files, describing the usage that each group made 
+# of the different paper elements (manipulatives, hints, etc)
 getLogSummariesInclAct4 <- function(logdir,mapsData){
   
   # We get the basic, overall summaries
@@ -84,7 +85,8 @@ getLogSummariesInclAct4 <- function(logdir,mapsData){
   data
 }
 
-
+# This function gets summaries of the logs (during how many log samples a certain element was on the table)
+# within a concrete range of time (e.g., in Activity 4 when they had free choice of elements)
 getRangedLogSummaries <- function(logdir, globaldata, starts, ends){
   
   setwd(logdir)
@@ -108,6 +110,17 @@ getRangedLogSummaries <- function(logdir, globaldata, starts, ends){
   Relative.Help.Disc.Act4 = numeric(num_groups)
   Relative.Help.Dec.Act4 = numeric(num_groups)
   Relative.Help.Frac.Act4 = numeric(num_groups)
+  
+  # We add variables regarding the sole or combined usage of representations within Act 4
+  Relative.Usage.None.Act4 = numeric(num_groups)
+  Relative.Usage.Sole.Cont.Act4 = numeric(num_groups)
+  Relative.Usage.Sole.Disc.Act4 = numeric(num_groups)
+  Relative.Usage.Sole.Frac.Act4 = numeric(num_groups)
+  Relative.Usage.Cont.Disc.Act4 = numeric(num_groups)
+  Relative.Usage.Disc.Frac.Act4 = numeric(num_groups)
+  Relative.Usage.Frac.Cont.Act4 = numeric(num_groups)
+  Relative.Usage.All.Act4 = numeric(num_groups)
+  
   
   for(i in 1:num_groups){
     # We open the file for each group
@@ -135,6 +148,16 @@ getRangedLogSummaries <- function(logdir, globaldata, starts, ends){
     Relative.Help.Disc.Act4[i] <- Help.Disc.Act4[i]/num_samples
     Relative.Help.Dec.Act4[i] <- Help.Dec.Act4[i]/num_samples
     Relative.Help.Frac.Act4[i] <- Help.Frac.Act4[i]/num_samples
+    
+    Relative.Usage.None.Act4[i] = sum(!data$UsingCont & !data$UsingDisc & !data$UsingFrac)/num_samples
+    Relative.Usage.Sole.Cont.Act4[i] = sum(data$UsingCont & !data$UsingDisc & !data$UsingFrac)/num_samples
+    Relative.Usage.Sole.Disc.Act4[i] = sum(!data$UsingCont & data$UsingDisc & !data$UsingFrac)/num_samples
+    Relative.Usage.Sole.Frac.Act4[i] = sum(!data$UsingCont & !data$UsingDisc & data$UsingFrac)/num_samples
+    Relative.Usage.Cont.Disc.Act4[i] = sum(data$UsingCont & data$UsingDisc & !data$UsingFrac)/num_samples
+    Relative.Usage.Disc.Frac.Act4[i] = sum(!data$UsingCont & data$UsingDisc & data$UsingFrac)/num_samples
+    Relative.Usage.Frac.Cont.Act4[i] = sum(data$UsingCont & !data$UsingDisc & data$UsingFrac)/num_samples
+    Relative.Usage.All.Act4[i] = sum(data$UsingCont & data$UsingDisc & data$UsingFrac)/num_samples
+    
   }
   
   # the log data summary for each group
@@ -154,7 +177,15 @@ getRangedLogSummaries <- function(logdir, globaldata, starts, ends){
                            Relative.Help.Rect.Act4,
                            Relative.Help.Disc.Act4,
                            Relative.Help.Dec.Act4,
-                           Relative.Help.Frac.Act4)
+                           Relative.Help.Frac.Act4,
+                      Relative.Usage.None.Act4,
+                      Relative.Usage.Sole.Cont.Act4,
+                      Relative.Usage.Sole.Disc.Act4,
+                      Relative.Usage.Sole.Frac.Act4,
+                      Relative.Usage.Cont.Disc.Act4,
+                      Relative.Usage.Disc.Frac.Act4,
+                      Relative.Usage.Frac.Cont.Act4,
+                      Relative.Usage.All.Act4)
   
   logSummary
   
@@ -333,22 +364,22 @@ allCrossedDataPlots <- function(logMapSummary, surveyData){
   dev.off()
 
   
-# Basic boxplots of the survey data, total and separated by sequence
-png("Q1.Boxplot.png",width=1280,height=1024)  
-par(mfrow=c(1,1))
-boxplot(totalDataComplete$Q1.More.Fun, ylim=c(1,5), main="Q1", sub="I prefer this way to what we do at school", xlab="Total")
-dev.off()
-
-png("Q2.Q3.Boxplot.Sequence.Session.Cluster.png",width=1280,height=1024)  
-par(mfrow=c(2,3),cex.axis=0.75)
-boxplot(totalDataComplete$Q2.Concrete.Repr ~ totalDataComplete$Sequence, ylim=c(1,5), main="Q2", xlab="Manipulative Sequence", col=(c("lightgoldenrod","lightgreen")))
-boxplot(totalDataComplete$Q2.Concrete.Repr ~ totalDataComplete$Sequence * totalDataComplete$Session, ylim=c(1,5), sub="I prefer concrete representations to abstract/numerical", xlab="Manipulative Sequence and Session", col=(c("lightgoldenrod","lightgreen")))
-boxplot(totalDataComplete$Q2.Concrete.Repr ~ totalDataComplete$Performance.Cluster, ylim=c(1,5), main="Q2", xlab="Performance cluster", col=(c("red","blue")))
-
-boxplot(totalDataComplete$Q3.Continuous.Repr ~ totalDataComplete$Sequence, ylim=c(1,5), main="Q3", xlab="Manipulative Sequence", col=(c("lightgoldenrod","lightgreen")))
-boxplot(totalDataComplete$Q3.Continuous.Repr ~ totalDataComplete$Sequence * totalDataComplete$Session, ylim=c(1,5), sub="I prefer continuous tangibles to tokens", xlab="Manipulative Sequence and Session", col=(c("lightgoldenrod","lightgreen")))
-boxplot(totalDataComplete$Q3.Continuous.Repr ~ totalDataComplete$Performance.Cluster, ylim=c(1,5), main="Q3", xlab="Performance cluster", col=(c("red","blue")))
-dev.off()
+  # Basic boxplots of the survey data, total and separated by sequence
+  png("Q1.Boxplot.png",width=1280,height=1024)  
+  par(mfrow=c(1,1))
+  boxplot(totalDataComplete$Q1.More.Fun, ylim=c(1,5), main="Q1", sub="I prefer this way to what we do at school", xlab="Total")
+  dev.off()
+  
+  png("Q2.Q3.Boxplot.Sequence.Session.Cluster.png",width=1280,height=1024)  
+  par(mfrow=c(2,3),cex.axis=0.75)
+  boxplot(totalDataComplete$Q2.Concrete.Repr ~ totalDataComplete$Sequence, ylim=c(1,5), main="Q2", xlab="Manipulative Sequence", col=(c("lightgoldenrod","lightgreen")))
+  boxplot(totalDataComplete$Q2.Concrete.Repr ~ totalDataComplete$Sequence * totalDataComplete$Session, ylim=c(1,5), sub="I prefer concrete representations to abstract/numerical", xlab="Manipulative Sequence and Session", col=(c("lightgoldenrod","lightgreen")))
+  boxplot(totalDataComplete$Q2.Concrete.Repr ~ totalDataComplete$Performance.Cluster, ylim=c(1,5), main="Q2", xlab="Performance cluster", col=(c("red","blue")))
+  
+  boxplot(totalDataComplete$Q3.Continuous.Repr ~ totalDataComplete$Sequence, ylim=c(1,5), main="Q3", xlab="Manipulative Sequence", col=(c("lightgoldenrod","lightgreen")))
+  boxplot(totalDataComplete$Q3.Continuous.Repr ~ totalDataComplete$Sequence * totalDataComplete$Session, ylim=c(1,5), sub="I prefer continuous tangibles to tokens", xlab="Manipulative Sequence and Session", col=(c("lightgoldenrod","lightgreen")))
+  boxplot(totalDataComplete$Q3.Continuous.Repr ~ totalDataComplete$Performance.Cluster, ylim=c(1,5), main="Q3", xlab="Performance cluster", col=(c("red","blue")))
+  dev.off()
 
 
 
@@ -385,10 +416,25 @@ dev.off()
   multiplot(p1, p3, p5, cols=3)
   dev.off()
   
+
+  # TODO: Get data on the usage of elements in Act 4 (n=9)
+  act4UsageData <- na.omit(totalDataComplete[,c("Group.Name", "Sequence","Q1.More.Fun","Q2.Concrete.Repr","Q3.Continuous.Repr",
+                             "Mentions.Fractions","Gets.Mechanic","Act4.Finished.Maps","Maps.perTime",
+                             "Relative.Help.Circ.Act4","Relative.Help.Rect.Act4","Relative.Help.Disc.Act4","Relative.Help.Dec.Act4","Relative.Help.Frac.Act4",
+                             "Relative.Usage.None.Act4", "Relative.Usage.Sole.Cont.Act4", "Relative.Usage.Sole.Disc.Act4", "Relative.Usage.Sole.Frac.Act4",
+                             "Relative.Usage.Cont.Disc.Act4", "Relative.Usage.Disc.Frac.Act4", "Relative.Usage.Frac.Cont.Act4", "Relative.Usage.All.Act4")])
+
+  # Some more graph ideas
+  # Create a factor variable about representation in use for each moment (pure cont, pure disc, pure symb, ), and do line graph among different levels (are there transitions, or each group only does one combination?)
+  # Do histogram/barplot of groups using each kind (binary), for representations and for hints
+  # Do histogram/barplot of groups using each kind, for representations and for hints (relative to Act4 time)
+  # Relate the combination of each group to the performance metrics (maps completed, mention of fractions...)
+
   
 }
 
-
+# This function takes a data frame, and makes a k-means clustering (k=2) of the subjects, with regard to the four performance metrics
+# Then, it adds a factor with this cluster to the data frame
 addPerformanceCluster <- function(data){
   
   perf <- data[,c("Group.Name","Maps.perTime","Mentions.Fractions","Gets.Mechanic","Act4.Finished.Maps")]
@@ -492,6 +538,7 @@ getLogSummaries <- function(rootDir){
   logSummary
 }
 
+# This function plots some very basic graphs about the likert responses in the survey (likability of the system and different kinds of elements)
 basicSurveyPlots <- function(surveyData){
   
   # Basic boxplots of the survey data, total and separated by sequence
@@ -530,6 +577,7 @@ basicSurveyPlots <- function(surveyData){
   
 }
 
+# This function gets the (individual) data from the Likert surveys and does a group-level aggregation of it
 getSurveySummary <- function(surveyData){
   
   surveySummary <- as.data.frame((aggregate(Sequence~Group.Number, data=surveyData, unique))$Group.Number)
