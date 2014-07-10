@@ -155,6 +155,184 @@ mergeSplitLogFiles <- function(directory, startTime, endTime, label){
       # We get the list of tags detected
       tags <- validEntries$tags[[i]]
       
+      #We get the position (x,y coordinates) of each tag group, or NA if not present
+      newData$Position.C1[[i]] <- getPositionTagGroup(tags,316:320) # Continuous Circular 1 set
+      newData$Position.C2[[i]] <- getPositionTagGroup(tags,321:325) # Continuous Circular 2 set
+      newData$Position.R1[[i]] <- getPositionTagGroup(tags,326:330) # Continuous Rectangular 1 set
+      newData$Position.R2[[i]] <- getPositionTagGroup(tags,331:335) # Continuous Rectangular 2 set
+      
+      newData$Position.Token1[[i]] <- getPositionTokensInQuadrant(tags,displayWidth,displayHeight,369:408,1) # Tokens in Quadrant 1
+      newData$Position.Token2[[i]] <- getPositionTokensInQuadrant(tags,displayWidth,displayHeight,369:408,2) # Tokens in Quadrant 2
+      newData$Position.Token3[[i]] <- getPositionTokensInQuadrant(tags,displayWidth,displayHeight,369:408,3) # Tokens in Quadrant 3
+      newData$Position.Token4[[i]] <- getPositionTokensInQuadrant(tags,displayWidth,displayHeight,369:408,4) # Tokens in Quadrant 4
+      
+      newData$Position.Fraction12[[i]] <- getPositionTagGroup(tags,345) # Fraction Card 1/2
+      newData$Position.Fraction13[[i]] <- getPositionTagGroup(tags,346) # Fraction Card 1/3
+      newData$Position.Fraction23[[i]] <- getPositionTagGroup(tags,347) # Fraction Card 2/3
+      newData$Position.Fraction14[[i]] <- getPositionTagGroup(tags,348) # Fraction Card 1/4
+      newData$Position.Fraction24[[i]] <- getPositionTagGroup(tags,349) # Fraction Card 2/4
+      newData$Position.Fraction34[[i]] <- getPositionTagGroup(tags,350) # Fraction Card 3/4
+      newData$Position.Fraction15[[i]] <- getPositionTagGroup(tags,351) # Fraction Card 1/5
+      newData$Position.Fraction25[[i]] <- getPositionTagGroup(tags,352) # Fraction Card 2/5
+      newData$Position.Fraction35[[i]] <- getPositionTagGroup(tags,353) # Fraction Card 3/5
+      newData$Position.Fraction45[[i]] <- getPositionTagGroup(tags,354) # Fraction Card 4/5
+      newData$Position.Fraction16[[i]] <- getPositionTagGroup(tags,355) # Fraction Card 1/6
+      newData$Position.Fraction26[[i]] <- getPositionTagGroup(tags,356) # Fraction Card 2/6
+      newData$Position.Fraction36[[i]] <- getPositionTagGroup(tags,357) # Fraction Card 3/6
+      newData$Position.Fraction46[[i]] <- getPositionTagGroup(tags,358) # Fraction Card 4/6
+      newData$Position.Fraction56[[i]] <- getPositionTagGroup(tags,359) # Fraction Card 5/6
+      newData$Position.Fraction110[[i]] <- getPositionTagGroup(tags,360) # Fraction Card 1/10
+      newData$Position.Fraction210[[i]] <- getPositionTagGroup(tags,361) # Fraction Card 2/10
+      newData$Position.Fraction310[[i]] <- getPositionTagGroup(tags,362) # Fraction Card 3/10
+      newData$Position.Fraction410[[i]] <- getPositionTagGroup(tags,363) # Fraction Card 4/10
+      newData$Position.Fraction510[[i]] <- getPositionTagGroup(tags,364) # Fraction Card 5/10
+      newData$Position.Fraction610[[i]] <- getPositionTagGroup(tags,365) # Fraction Card 6/10
+      newData$Position.Fraction710[[i]] <- getPositionTagGroup(tags,366) # Fraction Card 7/10
+      newData$Position.Fraction810[[i]] <- getPositionTagGroup(tags,367) # Fraction Card 8/10
+      newData$Position.Fraction910[[i]] <- getPositionTagGroup(tags,368) # Fraction Card 9/10
+      
+      newData$Position.Integer1R[[i]] <- getPositionTagGroup(tags,300) # Integer Card 1R
+      newData$Position.Integer2R[[i]] <- getPositionTagGroup(tags,301) # Integer Card 2R
+      newData$Position.Integer3R[[i]] <- getPositionTagGroup(tags,302) # Integer Card 3R
+      newData$Position.Integer4R[[i]] <- getPositionTagGroup(tags,303) # Integer Card 4R
+      newData$Position.Integer1G[[i]] <- getPositionTagGroup(tags,304) # Integer Card 1G
+      newData$Position.Integer2G[[i]] <- getPositionTagGroup(tags,305) # Integer Card 2G
+      newData$Position.Integer3G[[i]] <- getPositionTagGroup(tags,306) # Integer Card 3G
+      newData$Position.Integer4G[[i]] <- getPositionTagGroup(tags,307) # Integer Card 4G
+      newData$Position.Integer1B[[i]] <- getPositionTagGroup(tags,308) # Integer Card 1B
+      newData$Position.Integer2B[[i]] <- getPositionTagGroup(tags,309) # Integer Card 2B
+      newData$Position.Integer3B[[i]] <- getPositionTagGroup(tags,310) # Integer Card 3B
+      newData$Position.Integer4B[[i]] <- getPositionTagGroup(tags,311) # Integer Card 4B
+      newData$Position.Integer1P[[i]] <- getPositionTagGroup(tags,312) # Integer Card 1P
+      newData$Position.Integer2P[[i]] <- getPositionTagGroup(tags,313) # Integer Card 2P
+      newData$Position.Integer3P[[i]] <- getPositionTagGroup(tags,314) # Integer Card 3P
+      newData$Position.Integer4P[[i]] <- getPositionTagGroup(tags,315) # Integer Card 4P
+      
+      newData$Position.Go[[i]] <- getPositionTagGroup(tags,341:344) # Go! Card
+      
+      newData$Position.DiscreteHint[[i]] <- getPositionTagGroup(tags,336) # Discrete hint card
+      newData$Position.FractionHint[[i]] <- getPositionTagGroup(tags,337) # Fraction hint card
+      newData$Position.CircularHint[[i]] <- getPositionTagGroup(tags,340) # Circular hint card
+      newData$Position.RectangularHint[[i]] <- getPositionTagGroup(tags,339) # Rectangular hint card
+      newData$Position.DecimalHint[[i]] <- getPositionTagGroup(tags,338) # Decimal hint card
+      
+      newData$Position.Carte1[[i]] <- getPositionTagGroup(tags,409) # Carte 1 card
+      newData$Position.Carte2[[i]] <- getPositionTagGroup(tags,410) # Carte 2 card
+      newData$Position.Carte3[[i]] <- getPositionTagGroup(tags,411) # Carte 3 card
+      newData$Position.Carte4[[i]] <- getPositionTagGroup(tags,412) # Carte 4 card
+      newData$Position.Carte5[[i]] <- getPositionTagGroup(tags,413) # Carte 5 card
+      newData$Position.Carte6[[i]] <- getPositionTagGroup(tags,414) # Carte 6 card
+      newData$Position.Carte7[[i]] <- getPositionTagGroup(tags,415) # Carte 7 card
+      newData$Position.Carte8[[i]] <- getPositionTagGroup(tags,416) # Carte 8 card
+      newData$Position.Carte9[[i]] <- getPositionTagGroup(tags,417) # Carte 9 card
+      newData$Position.Carte10[[i]] <- getPositionTagGroup(tags,418) # Carte 10 card
+      
+      #We get the rotation of each tag group (except the tokens), as a value in radians or NA if not present
+      newData$Rotation.C1[[i]] <- getRotationTagGroup(tags,316:319) # Continuous Circular 1 set, not including the central tag
+      newData$Rotation.C2[[i]] <- getRotationTagGroup(tags,321:324) # Continuous Circular 2 set, not including the central tag
+      newData$Rotation.R1[[i]] <- getRotationTagGroup(tags,326:329) # Continuous Rectangular 1 set, not including the central tag
+      newData$Rotation.R2[[i]] <- getRotationTagGroup(tags,331:334) # Continuous Rectangular 2 set, not including the central tag
+      
+      newData$Rotation.Fraction12[[i]] <- getRotationTagGroup(tags,345) # Fraction Card 1/2
+      newData$Rotation.Fraction13[[i]] <- getRotationTagGroup(tags,346) # Fraction Card 1/3
+      newData$Rotation.Fraction23[[i]] <- getRotationTagGroup(tags,347) # Fraction Card 2/3
+      newData$Rotation.Fraction14[[i]] <- getRotationTagGroup(tags,348) # Fraction Card 1/4
+      newData$Rotation.Fraction24[[i]] <- getRotationTagGroup(tags,349) # Fraction Card 2/4
+      newData$Rotation.Fraction34[[i]] <- getRotationTagGroup(tags,350) # Fraction Card 3/4
+      newData$Rotation.Fraction15[[i]] <- getRotationTagGroup(tags,351) # Fraction Card 1/5
+      newData$Rotation.Fraction25[[i]] <- getRotationTagGroup(tags,352) # Fraction Card 2/5
+      newData$Rotation.Fraction35[[i]] <- getRotationTagGroup(tags,353) # Fraction Card 3/5
+      newData$Rotation.Fraction45[[i]] <- getRotationTagGroup(tags,354) # Fraction Card 4/5
+      newData$Rotation.Fraction16[[i]] <- getRotationTagGroup(tags,355) # Fraction Card 1/6
+      newData$Rotation.Fraction26[[i]] <- getRotationTagGroup(tags,356) # Fraction Card 2/6
+      newData$Rotation.Fraction36[[i]] <- getRotationTagGroup(tags,357) # Fraction Card 3/6
+      newData$Rotation.Fraction46[[i]] <- getRotationTagGroup(tags,358) # Fraction Card 4/6
+      newData$Rotation.Fraction56[[i]] <- getRotationTagGroup(tags,359) # Fraction Card 5/6
+      newData$Rotation.Fraction110[[i]] <- getRotationTagGroup(tags,360) # Fraction Card 1/10
+      newData$Rotation.Fraction210[[i]] <- getRotationTagGroup(tags,361) # Fraction Card 2/10
+      newData$Rotation.Fraction310[[i]] <- getRotationTagGroup(tags,362) # Fraction Card 3/10
+      newData$Rotation.Fraction410[[i]] <- getRotationTagGroup(tags,363) # Fraction Card 4/10
+      newData$Rotation.Fraction510[[i]] <- getRotationTagGroup(tags,364) # Fraction Card 5/10
+      newData$Rotation.Fraction610[[i]] <- getRotationTagGroup(tags,365) # Fraction Card 6/10
+      newData$Rotation.Fraction710[[i]] <- getRotationTagGroup(tags,366) # Fraction Card 7/10
+      newData$Rotation.Fraction810[[i]] <- getRotationTagGroup(tags,367) # Fraction Card 8/10
+      newData$Rotation.Fraction910[[i]] <- getRotationTagGroup(tags,368) # Fraction Card 9/10
+      
+      newData$Rotation.Integer1R[[i]] <- getRotationTagGroup(tags,300) # Integer Card 1R
+      newData$Rotation.Integer2R[[i]] <- getRotationTagGroup(tags,301) # Integer Card 2R
+      newData$Rotation.Integer3R[[i]] <- getRotationTagGroup(tags,302) # Integer Card 3R
+      newData$Rotation.Integer4R[[i]] <- getRotationTagGroup(tags,303) # Integer Card 4R
+      newData$Rotation.Integer1G[[i]] <- getRotationTagGroup(tags,304) # Integer Card 1G
+      newData$Rotation.Integer2G[[i]] <- getRotationTagGroup(tags,305) # Integer Card 2G
+      newData$Rotation.Integer3G[[i]] <- getRotationTagGroup(tags,306) # Integer Card 3G
+      newData$Rotation.Integer4G[[i]] <- getRotationTagGroup(tags,307) # Integer Card 4G
+      newData$Rotation.Integer1B[[i]] <- getRotationTagGroup(tags,308) # Integer Card 1B
+      newData$Rotation.Integer2B[[i]] <- getRotationTagGroup(tags,309) # Integer Card 2B
+      newData$Rotation.Integer3B[[i]] <- getRotationTagGroup(tags,310) # Integer Card 3B
+      newData$Rotation.Integer4B[[i]] <- getRotationTagGroup(tags,311) # Integer Card 4B
+      newData$Rotation.Integer1P[[i]] <- getRotationTagGroup(tags,312) # Integer Card 1P
+      newData$Rotation.Integer2P[[i]] <- getRotationTagGroup(tags,313) # Integer Card 2P
+      newData$Rotation.Integer3P[[i]] <- getRotationTagGroup(tags,314) # Integer Card 3P
+      newData$Rotation.Integer4P[[i]] <- getRotationTagGroup(tags,315) # Integer Card 4P
+      
+      newData$Rotation.Go[[i]] <- getRotationTagGroup(tags,341:344) # Go! Card
+      
+      newData$Rotation.DiscreteHint[[i]] <- getRotationTagGroup(tags,336) # Discrete hint card
+      newData$Rotation.FractionHint[[i]] <- getRotationTagGroup(tags,337) # Fraction hint card
+      newData$Rotation.CircularHint[[i]] <- getRotationTagGroup(tags,340) # Circular hint card
+      newData$Rotation.RectangularHint[[i]] <- getRotationTagGroup(tags,339) # Rectangular hint card
+      newData$Rotation.DecimalHint[[i]] <- getRotationTagGroup(tags,338) # Decimal hint card
+      
+      newData$Rotation.Carte1[[i]] <- getRotationTagGroup(tags,409) # Carte 1 card
+      newData$Rotation.Carte2[[i]] <- getRotationTagGroup(tags,410) # Carte 2 card
+      newData$Rotation.Carte3[[i]] <- getRotationTagGroup(tags,411) # Carte 3 card
+      newData$Rotation.Carte4[[i]] <- getRotationTagGroup(tags,412) # Carte 4 card
+      newData$Rotation.Carte5[[i]] <- getRotationTagGroup(tags,413) # Carte 5 card
+      newData$Rotation.Carte6[[i]] <- getRotationTagGroup(tags,414) # Carte 6 card
+      newData$Rotation.Carte7[[i]] <- getRotationTagGroup(tags,415) # Carte 7 card
+      newData$Rotation.Carte8[[i]] <- getRotationTagGroup(tags,416) # Carte 8 card
+      newData$Rotation.Carte9[[i]] <- getRotationTagGroup(tags,417) # Carte 9 card
+      newData$Rotation.Carte10[[i]] <- getRotationTagGroup(tags,418) # Carte 10 card
+      
+      #TODO: For token and abstract fractions, we get the numerator and denominator, or NA if not present
+      newData$NumDem.Token1[[i]] <- getNumDenTokensInQuadrant(tags,displayWidth,displayHeight,369:408,369:388,1) # Tokens in Quadrant 1
+      newData$NumDem.Token2[[i]] <- getNumDenTokensInQuadrant(tags,displayWidth,displayHeight,369:408,369:388,2) # Tokens in Quadrant 2
+      newData$NumDem.Token3[[i]] <- getNumDenTokensInQuadrant(tags,displayWidth,displayHeight,369:408,369:388,3) # Tokens in Quadrant 3
+      newData$NumDem.Token4[[i]] <- getNumDenTokensInQuadrant(tags,displayWidth,displayHeight,369:408,369:388,4) # Tokens in Quadrant 4
+      
+      newData$NumDem.Fraction12[[i]] <- getNumDenFraction(tags,345,1,2) # Fraction Card 1/2
+      newData$NumDem.Fraction13[[i]] <- getNumDenFraction(tags,346,1,3) # Fraction Card 1/3
+      newData$NumDem.Fraction23[[i]] <- getNumDenFraction(tags,347,2,3) # Fraction Card 2/3
+      newData$NumDem.Fraction14[[i]] <- getNumDenFraction(tags,348,1,4) # Fraction Card 1/4
+      newData$NumDem.Fraction24[[i]] <- getNumDenFraction(tags,349,2,4) # Fraction Card 2/4
+      newData$NumDem.Fraction34[[i]] <- getNumDenFraction(tags,350,3,4) # Fraction Card 3/4
+      newData$NumDem.Fraction15[[i]] <- getNumDenFraction(tags,351,1,5) # Fraction Card 1/5
+      newData$NumDem.Fraction25[[i]] <- getNumDenFraction(tags,352,2,5) # Fraction Card 2/5
+      newData$NumDem.Fraction35[[i]] <- getNumDenFraction(tags,353,3,5) # Fraction Card 3/5
+      newData$NumDem.Fraction45[[i]] <- getNumDenFraction(tags,354,4,5) # Fraction Card 4/5
+      newData$NumDem.Fraction16[[i]] <- getNumDenFraction(tags,355,1,6) # Fraction Card 1/6
+      newData$NumDem.Fraction26[[i]] <- getNumDenFraction(tags,356,2,6) # Fraction Card 2/6
+      newData$NumDem.Fraction36[[i]] <- getNumDenFraction(tags,357,3,6) # Fraction Card 3/6
+      newData$NumDem.Fraction46[[i]] <- getNumDenFraction(tags,358,4,6) # Fraction Card 4/6
+      newData$NumDem.Fraction56[[i]] <- getNumDenFraction(tags,359,5,6) # Fraction Card 5/6
+      newData$NumDem.Fraction110[[i]] <- getNumDenFraction(tags,360,1,10) # Fraction Card 1/10
+      newData$NumDem.Fraction210[[i]] <- getNumDenFraction(tags,361,2,10) # Fraction Card 2/10
+      newData$NumDem.Fraction310[[i]] <- getNumDenFraction(tags,362,3,10) # Fraction Card 3/10
+      newData$NumDem.Fraction410[[i]] <- getNumDenFraction(tags,363,4,10) # Fraction Card 4/10
+      newData$NumDem.Fraction510[[i]] <- getNumDenFraction(tags,364,5,10) # Fraction Card 5/10
+      newData$NumDem.Fraction610[[i]] <- getNumDenFraction(tags,365,6,10) # Fraction Card 6/10
+      newData$NumDem.Fraction710[[i]] <- getNumDenFraction(tags,366,7,10) # Fraction Card 7/10
+      newData$NumDem.Fraction810[[i]] <- getNumDenFraction(tags,367,8,10) # Fraction Card 8/10
+      newData$NumDem.Fraction910[[i]] <- getNumDenFraction(tags,368,9,10) # Fraction Card 9/10
+      
+      
+      #For continuous fractions, we get the fraction value (as a decimal number)
+      newData$Value.C1[[i]] <- getContinuousValue(tags,316:320,"C") # Continuous Circular 1 set
+      newData$Value.C2[[i]] <- getContinuousValue(tags,321:325,"C") # Continuous Circular 2 set
+      newData$Value.R1[[i]] <- getContinuousValue(tags,326:330,"R") # Continuous Rectangular 1 set
+      newData$Value.R2[[i]] <- getContinuousValue(tags,331:335,"R") # Continuous Rectangular 2 set
+      
+      
       # We get the quadrant of each tag group, returned as characters "0" "Q1" "Q2" "Q3" "Q4" (to be later converted into factors)
       newData$C1[[i]] <- getQuadrantTagGroup(tags,displayWidth,displayHeight,316:320) # Continuous Circular 1 set
       newData$C2[[i]] <- getQuadrantTagGroup(tags,displayWidth,displayHeight,321:325) # Continuous Circular 2 set
@@ -227,7 +405,7 @@ mergeSplitLogFiles <- function(directory, startTime, endTime, label){
       newData$Carte9[[i]] <- getQuadrantTagGroup(tags,displayWidth,displayHeight,417) # Carte 9 card
       newData$Carte10[[i]] <- getQuadrantTagGroup(tags,displayWidth,displayHeight,418) # Carte 10 card
       
-      # Optionally, we can add some time measurement represented by this value? but then what do we do with interruptions/gaps?
+      # TODO: Optionally, we can add some time measurement represented by this value? but then what do we do with interruptions/gaps?
     
     }
 
@@ -240,13 +418,15 @@ mergeSplitLogFiles <- function(directory, startTime, endTime, label){
   #We convert the character fields to factors
   #totalData[sapply(totalData, is.character)] <- lapply(totalData[sapply(totalData, is.character)], as.factor)
   if(length(totalData$timestamp)!=0){
+    
+    #TODO: Modify this if we add more fields that are not factors/quadrants
     for(i in 2:length(totalData)) totalData[i][[1]] <- factor(totalData[i][[1]],levels=c("0","Q1","Q2","Q3","Q4"))
     
     cat (paste("Finished processing for group ",label,". Writing",as.character(length(totalData$timestamp)),"cleaned log entries to file\n"))
     # Go back to the original current dir
     setwd(originalDir)
     
-    # serialize() the clean object into a binary R file, and also into xlsx?
+    # serialize() the clean object into a binary R file
     save(totalData,file=paste(label,".rda",sep=""),compress=TRUE)
   }else{
     # Go back to the original current dir
@@ -254,9 +434,198 @@ mergeSplitLogFiles <- function(directory, startTime, endTime, label){
 
     cat (paste("Finished processing for group ",label,". No log entries to write!\n"))
   }
-       
+  
+  #TODO: We read and join all .rda files in a single one with the additional "Group.Name" field?
+  
   
 }
+
+# Returns a vector with the numerator and denominator of a fraction card if it is present in the table, or NA if it's not present
+getNumDenFraction <- function(tags,targetTags,numerator,denominator){
+  
+  # This is the variable that will store the tag group's center
+  fraction <- c(num=0,den=0)
+  
+  # Which tags from this set are present
+  presentTags <- tags[tags$id %in% targetTags,]
+  
+  # if none of the tags of this tangible is present, return 0
+  if(length(presentTags$id)==0) return(NA)
+  else{ #Some tags are present, let's calculate the centroid
+    fraction <- c(num=integer(numerator),den=integer(denominator))
+  }
+  
+  fraction
+}
+
+# Returns a vector with the numerator (number of yellow tokens) and denominator (number of tokens) of a group of tokens IN A QUADRANT, or NA if it's not present
+getNumDenTokensInQuadrant <- function(tags,displayWidth,displayHeight,targetTags,numeratorTags,quadrantToCheck){
+  
+  # This is the variable that will store the tag group's center
+  numerator <- 0
+  denominator <- 0
+  
+  # Which tags from this set are present
+  presentTags <- tags[tags$id %in% targetTags,]
+  presentNumTags <- tags[tags$id %in% numeratorTags,]
+  
+  # if none of the tokens is present IN THE WHOLE TABLE, return NA
+  if(length(presentTags$id)==0) return(NA)
+  else{ #Some tags are present, let's calculate which quadrants they're on
+    centers <- sapply(presentTags$corners,getCenter) #this is an 2xn matrix with all the tokens center coordinates
+    centersNum <- sapply(numeratorTags$corners,getCenter) #this is an 2xn matrix with the yellow tokens center coordinates
+    # We restrict our focus to only one quadrant's centers
+    if(quadrantToCheck==1){
+      centers <- as.matrix(centers[,(centers[1,] >= width/2 & centers[2,] < height/2)])
+      centersNum <- as.matrix(centersNum[,(centersNum[1,] >= width/2 & centersNum[2,] < height/2)])
+    }else if(quadrantToCheck==2){
+      centers <- as.matrix(centers[,(centers[1,] < width/2 & centers[2,] < height/2)])
+      centersNum <- as.matrix(centersNum[,(centersNum[1,] < width/2 & centersNum[2,] < height/2)])
+    }else if(quadrantToCheck==3){
+      centers <- as.matrix(centers[,(centers[1,] < width/2 & centers[2,] >= height/2)])
+      centersNum <- as.matrix(centersNum[,(centersNum[1,] < width/2 & centersNum[2,] >= height/2)])
+    }else if(quadrantToCheck==4){
+      centers <- as.matrix(centers[,(centers[1,] >= width/2 & centers[2,] >= height/2)])
+      centersNum <- as.matrix(centersNum[,(centersNum[1,] >= width/2 & centersNum[2,] >= height/2)])
+    }
+  }
+  
+  # We Get the number of concerned tags in our quadrant
+  if(length(centers)==0) return(NA)
+  else{
+    denominator <- integer(dim(centers)[[2]])
+    numerator <- integer(dim(centersNum)[[2]])
+  }
+  
+  return(c(num=numerator,den=denominator))
+  
+}
+
+
+# getQuadrantTagGroup - this function gets a dataframe with the present tags and their 
+# coordinates in a certain point in time, and returns the centroid of the token tags
+# WITHIN A CERTAIN QUADRANT (since a set of tokens can be distributed in all four quadrants),
+# responding with a numeric vector (x,y) or NA if no tokens are on that quadrant
+# Parameters: tags is the data.frame with the tag ids and their corners; width and height are the size of the display, 
+# which define the position of the quadrants, targetTags is the group of tags that make up the 
+# global token taggroup, quadrantToCheck is the quadrant on which we are focusing
+getPositionTokensInQuadrant <- function(tags,displayWidth,displayHeight,targetTags,quadrantToCheck){
+  
+  # This is the variable that will store the tag group's center
+  position <- c(x=0,y=0)
+  
+  # Which tags from this set are present
+  presentTags <- tags[tags$id %in% targetTags,]
+  
+  # if none of the tokens is present IN THE WHOLE TABLE, return 0
+  if(length(presentTags$id)==0) return(NA)
+  else{ #Some tags are present, let's calculate which quadrants they're on
+    centers <- sapply(presentTags$corners,getCenter) #this is an 2xn matrix with all the tokens center coordinates
+    # We restrict our focus to only one quadrant's centers
+    if(quadrantToCheck==1){
+      centers <- as.matrix(centers[,(centers[1,] >= width/2 & centers[2,] < height/2)])
+    }else if(quadrantToCheck==2){
+      centers <- as.matrix(centers[,(centers[1,] < width/2 & centers[2,] < height/2)])
+    }else if(quadrantToCheck==3){
+      centers <- as.matrix(centers[,(centers[1,] < width/2 & centers[2,] >= height/2)])
+    }else if(quadrantToCheck==4){
+      centers <- as.matrix(centers[,(centers[1,] >= width/2 & centers[2,] >= height/2)])
+    }
+  }
+  
+  # We Get the center of the concerned tags in our quadrant
+  if(length(centers)==0) return("0")
+  else position <- rowMeans(centers)
+  
+  return(c(x=position[[1]],y=position[[2]]))
+}
+
+# getPositionTagGroup - Given a set of detected tags (a data.frame), and a subgroup of all the tag ids to detect (a vector),
+# this function returns the centroid of this tag/tag group (a vector with two named numbers, the x-position and y-position in the screen)
+# or NA if the target tags are not present
+getPositionTagGroup <- function(tags,targetTags){
+  
+  # This is the variable that will store the tag group's center
+  position <- c(x=0,y=0)
+  
+  # Which tags from this set are present
+  presentTags <- tags[tags$id %in% targetTags,]
+  
+  # if none of the tags of this tangible is present, return 0
+  if(length(presentTags$id)==0) return(NA)
+  else{ #Some tags are present, let's calculate the centroid
+    position <- getListCenter(presentTags$corners)
+  }
+  
+  position
+}
+
+
+# getRotationTagGroup - Given a set of detected tags (a data.frame), and a subgroup of all the tag ids to detect (a vector),
+# this function returns the angle in which it is gyrated, from the vertical (a numeric value in radians)
+# or NA if the target tags are not present
+getRotationTagGroup <- function(tags,targetTags){
+  
+  # This is the variable that will store the tag group's center
+  rotation <- 0
+  
+  # Which tags from this set are present
+  presentTags <- tags[tags$id %in% targetTags,]
+  
+  # if none of the tags of this tangible is present, return NA
+  if(length(presentTags$id)==0) return(NA)
+  else{ #Some tags are present, let's calculate the centroid
+    rotation <- getListRotation(presentTags$corners)
+  }
+  
+  rotation
+}
+
+# TODO DANIELA
+# getListRotation - gets the rotation angle of a group of tags, in radians.
+# It receives a list of the detected tags to check, where each element is a list of 8 values (the four corners of the tag, x1, y1, x2, y2...)
+# (probably you can assume that all tags in the list will have the same rotation, or you can do an average of all of them 
+# - the center in the circular one should not have been passed onto here)
+getListRotation <- function(listCorners){
+  
+  if(length(listCorners)==0) return(NA)
+  
+  rotation <- 0 # Do whatever here
+  
+  return(rotation)
+  
+}
+
+# TODO DANIELA
+# getContinuousValue - this function calculates and returns the decimal value equivalent to the detected fraction manipulative (or NA if it cannot be calculated)
+# It receives a list of detected tags in a certain moment (a vector with the 8 corner coordinates, x1, y1, x2, y2...), 
+# the tag ids of the concerned manipulative (targetTags, the last one is the center one),
+# and a character denoting the kind of continuous manipulative (C)ircular or (R)ectangular
+getContinuousValue <- function(tags,targetTags,contType){
+  
+  # This is the variable that will store the tag group's center
+  value <- 0
+  
+  centerTagId <- targetTags[[length(targetTags)]] # This is the tag in the center of the continuous manipulative, the last value of the vector
+  
+  # Which tags from this set are present
+  presentTags <- tags[tags$id %in% targetTags,]
+  presentCenter <- tags[tags$id %in% centerTagId,]
+  
+  # if none of the tags of this tangible is present, or the center is not present, return NA
+  if(length(presentTags$id)==0 || length(presentCenter$id)==0) return(NA)
+  else{ #Some tags are present, let's calculate the centroid
+
+      if(contType=="R"){
+        value <- 0 # Do whatever with the here to calculate the rectangular value
+      }else if(contType=="C"){
+        value <- 0 # Do whatever with the here to calculate the circular value
+      }else return(NA)
+  }
+  
+  value
+}
+
 
 # getQuadrantTagGroup - this function gets a dataframe with the present tags and their 
 # coordinates in a certain point in time, and returns whether the centroid of the token tags
@@ -268,7 +637,7 @@ mergeSplitLogFiles <- function(directory, startTime, endTime, label){
 getTokensInQuadrant <- function(tags,width,height,targetTags,quadrantToCheck){
   
   # This is the variable that will store the tag group's center
-  position <- c(0,0)
+  position <- c(x=0,y=0)
   
   # Which tags from this set are present
   presentTags <- tags[tags$id %in% targetTags,]
@@ -323,11 +692,11 @@ getQuadrantTagGroup <- function(tags,width,height,targetTags){
 # getListCenter - gets the centroid of a group of tags, in the form of a list with the 8 coordinates of the corners
 getListCenter <- function(listCorners){
   
-  if(length(listCorners)==0) return(c(0,0))
+  if(length(listCorners)==0) return(c(x=0,y=0))
   
   centers <- sapply(listCorners,getCenter)
   
-  return(c(mean(centers[1,]),mean(centers[2,])))
+  return(c(x=mean(centers[1,]),y=mean(centers[2,])))
   
 }
 
