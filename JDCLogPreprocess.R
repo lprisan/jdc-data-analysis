@@ -444,7 +444,7 @@ mergeSplitLogFiles <- function(directory, startTime, endTime, label){
 getNumDenFraction <- function(tags,targetTags,numerator,denominator){
   
   # This is the variable that will store the tag group's center
-  fraction <- c(num=0,den=0)
+  fraction <- list()
   
   # Which tags from this set are present
   presentTags <- tags[tags$id %in% targetTags,]
@@ -452,7 +452,7 @@ getNumDenFraction <- function(tags,targetTags,numerator,denominator){
   # if none of the tags of this tangible is present, return 0
   if(length(presentTags$id)==0) return(NA)
   else{ #Some tags are present, let's calculate the centroid
-    fraction <- c(num=integer(numerator),den=integer(denominator))
+    fraction <- list(num=integer(numerator),den=integer(denominator))
   }
   
   fraction
@@ -497,7 +497,7 @@ getNumDenTokensInQuadrant <- function(tags,displayWidth,displayHeight,targetTags
     numerator <- integer(dim(centersNum)[[2]])
   }
   
-  return(c(num=numerator,den=denominator))
+  return(list(num=numerator,den=denominator))
   
 }
 
@@ -512,7 +512,7 @@ getNumDenTokensInQuadrant <- function(tags,displayWidth,displayHeight,targetTags
 getPositionTokensInQuadrant <- function(tags,displayWidth,displayHeight,targetTags,quadrantToCheck){
   
   # This is the variable that will store the tag group's center
-  position <- c(x=0,y=0)
+  position <- list()
   
   # Which tags from this set are present
   presentTags <- tags[tags$id %in% targetTags,]
@@ -534,10 +534,10 @@ getPositionTokensInQuadrant <- function(tags,displayWidth,displayHeight,targetTa
   }
   
   # We Get the center of the concerned tags in our quadrant
-  if(length(centers)==0) return("0")
+  if(length(centers)==0) return(NA)
   else position <- rowMeans(centers)
   
-  return(c(x=position[[1]],y=position[[2]]))
+  return(list(x=position[[1]],y=position[[2]]))
 }
 
 # getPositionTagGroup - Given a set of detected tags (a data.frame), and a subgroup of all the tag ids to detect (a vector),
@@ -546,7 +546,7 @@ getPositionTokensInQuadrant <- function(tags,displayWidth,displayHeight,targetTa
 getPositionTagGroup <- function(tags,targetTags){
   
   # This is the variable that will store the tag group's center
-  position <- c(x=0,y=0)
+  position <- list()
   
   # Which tags from this set are present
   presentTags <- tags[tags$id %in% targetTags,]
@@ -581,7 +581,6 @@ getRotationTagGroup <- function(tags,targetTags){
   rotation
 }
 
-# TODO DANIELA
 # getListRotation - gets the rotation angle of a group of tags, in radians.
 # It receives a list of the detected tags to check, where each element is a list of 8 values (the four corners of the tag, x1, y1, x2, y2...)
 # (probably you can assume that all tags in the list will have the same rotation, or you can do an average of all of them 
@@ -615,7 +614,6 @@ getListRotation <- function(listCorners){
   
 }
 
-# TODO DANIELA
 # getContinuousValue - this function calculates and returns the decimal value equivalent to the detected fraction manipulative (or NA if it cannot be calculated)
 # It receives a list of detected tags in a certain moment (a vector with the 8 corner coordinates, x1, y1, x2, y2...), 
 # the tag ids of the concerned manipulative (targetTags, the last one is the center one),
@@ -783,7 +781,7 @@ getListCenter <- function(listCorners){
   
   centers <- sapply(listCorners,getCenter)
   
-  return(c(x=mean(centers[1,]),y=mean(centers[2,])))
+  return(list(x=mean(centers[1,]),y=mean(centers[2,])))
   
 }
 
