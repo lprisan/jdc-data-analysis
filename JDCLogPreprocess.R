@@ -592,6 +592,25 @@ getListRotation <- function(listCorners){
   
   rotation <- 0 # Do whatever here
   
+  #We take the points of the first tag of the manipulative (we assume that with the first corner is enough), we just need the first and second corner
+  x1 <- listCorners[[1]]$corners[[1]]
+  y1 <- listCorners[[1]]$corners[[2]]
+  x2 <- listCorners[[1]]$corners[[3]]
+  y2 <- listCorners[[1]]$corners[[4]]
+  
+  rightVector <- c(x = x2 - x1, y = y2 - y1)
+    
+  if(rightVectorX > 0 && rightVectorY > 0)    rotation <- atan(y/x) #Case 1: first cuadrant
+  else if (rightVector.x < 0 && rightVector.y > 0)  rotation <- atan(-x/y) + pi/2 #Case 2: second cuadrant
+  else if (rightVector.x < 0 && rightVector.y < 0)  rotation <- atan(y/x) + pi #Case 3: third cuadrant
+  else if (rightVector.x > 0 && rightVector.y < 0)  rotation <- atan(-x/y) + 3*pi/2 #Case 4: fourth cuadrant
+  else if (rightVector.x == 0 && rightVector.y > 0) rotation <- pi/2 #Case 5: Y axis (+ direction) -> 90
+  else if (rightVector.x < 0 && rightVector.y == 0) rotation <- pi #Case 6: X axis (- direction) -> 180
+  else if (rightVector.x == 0 && rightVector.y < 0) rotation <- 3*pi/2 #Case 7: Y axis (- direction) -> 270
+  else{
+    rotation <- 0 #Case 8: X axis (+ direction)
+  }  
+    
   return(rotation)
   
 }
@@ -616,10 +635,78 @@ getContinuousValue <- function(tags,targetTags,contType){
   if(length(presentTags$id)==0 || length(presentCenter$id)==0) return(NA)
   else{ #Some tags are present, let's calculate the centroid
 
+    # If we can't see the first and second tag of the manipulative, then return NA.
+
+    tag1Id <- presentTags[[1]]$id
+    tag2Id <- presentTags[[2]]$id
+    
       if(contType=="R"){
-        value <- 0 # Do whatever with the here to calculate the rectangular value
-      }else if(contType=="C"){
-        value <- 0 # Do whatever with the here to calculate the circular value
+        
+        # First manipulative: tag 1 <- 326, tag 2 <- 327
+        # Second manipulative: tag 1 <- 331, tag 2 <- 332
+        if(( tag1Id == 326 || tag1Id == 331 ) && ( tag2Id == 327 || tag2Id == 332 )){
+          
+          value <- 0 # Do whatever with the here to calculate the rectangular value
+          
+          #The corner [0] of the tag [0] of the marker rectangle_origin (is a point2d)
+          originPoint <- c( x = presentTags[[1]]$corners[[1]], y =  presentTags[[1]]$corners[[2]]) 
+          
+          #The the corner [0] of the tag ofthe marker rectangle_control (is a point2d)
+          endPoint <- c(x = presentCenter$corners[[1]], y = presentCenter$corners[[2]])
+          
+          #The corner [0] of the tag [1] of the marker rectangle_origin (is a point2d)
+          startPoint <- c(x = presentTags[[2]]$corners[[1]], y = presentTags[[2]]$corners[[2]])
+            
+          #Calculate the angle
+          angle <- getVertexAngle(startPoint, originPoint, endPoint)
+          
+          #We calculate the distance between the two tags
+          totalDistance <- getDistance (originPoint, startPoint)
+          projectedDistance <- getDistance (originPoint, endPoint)*cos(angle)
+          
+          value <- projectedDistance / totalDistance
+        } 
+        else{
+          return (NA)
+        }
+      }
+        
+      }else if(contType=="C"){ #We need at least 3 tags, to calculate the center of the circunference
+        
+        # First manipulative: tag 1 <- 316, tag 2 <- 317
+        # Second manipulative: tag 1 <- 321, tag 2 <- 322
+        if(( tag1Id == 316 || tag1Id == 321 ) && ( tag2Id == 317 || tag2Id == 322 ) && length(presentTags$id) > 2){
+          
+          #Since we already know that tag 1 and 2 are present, the next tag will help us with the Y coordinate of the center of the marker
+          value <- 0 # Do whatever with the here to calculate the circular value
+          
+          x1 <- mean(presentTags[[1]]$corners[[1]] , presentTags[[1]]$corners[[3]]) #Center (x) of the first tag 
+          y1 <- mean(presentTags[[1]]$corners[[4]] , presentTags[[1]]$corners[[6]]) #Center (y) of the first tag
+          
+          x2 <- mean(presentTags[[2]]$corners[[1]] , presentTags[[2]]$corners[[3]]) #Center (x) of the second tag 
+          y2 <- mean(presentTags[[2]]$corners[[4]] , presentTags[[2]]$corners[[6]]) #Center (y) of the second tag
+          
+          x3 <- mean(presentTags[[3]]$corners[[1]] , presentTags[[3]]$corners[[3]]) #Center (x) of the third tag 
+          y3 <- mean(presentTags[[3]]$corners[[4]] , presentTags[[3]]$corners[[6]]) #Center (y) of the third tag
+          
+          #This is the center of the marker circular_origin (is a point2d)
+          originPoint <- c(x= mean(x1,x2), y= mean(y1,y3))
+          
+          #This is the center of the marker circunf_control (is a point2d)  
+          endPoint <- c(x = mean(presentCenter$corners[[1]],presentCenter$corners[[3]]),y = mean(presentCenter$corners[[4]],presentCenter$corners[[6]]) 
+          
+          #Centroid of the tag [0] and [1] of the circular_origin marker (is a point2d)
+          startPoint <- c( x = mean(x1,x2) , y = mean(y1,y2)) 
+            
+            
+          angle <- getVertexAngle(startPoint, originPoint, endPoint) #Check the parameters
+          
+          value <- 1 - (angle/(2*pi))
+        }
+        else{
+          return (NA)  
+        }
+        
       }else return(NA)
   }
   
@@ -723,3 +810,33 @@ getQuadrantFromPosition <- function(pos,width,height){
   
 }
 
+# getVertexAngle - gets the angle between three points x1,y1,x2,y2,x3,y3 in radians
+getVertexAngle <- function(startPoint, originPoint, endPoint){ ##Put the input here
+  
+  #I need the x1, x2, x3, y1, y2, y3
+  x1 <- startPoint.x - originPoint.x
+  x3 <- endPoint.x - originPorint.x
+  y1 <- startPoint.y - originPoint.y
+  y3 <- endPoint.y - originPoint.y
+  
+  #We calculate the distance
+  distance <- ((x1 * x1) + (y1 * y1))*((x3 * x3) + (y3 * y3))
+  
+  if(distance == 0) return (0)
+  else{
+    input <- (x1*x3 + y1*y3)/sqrt(dist)
+  
+    if(input == 1)  return (0)
+    else if (input == -1) return (pi)
+    else  return(acos(input))
+  }
+}
+
+#getDistance - gets the distance between two points (x1,y1) and (x2,y2)
+getDistance <- function(point1, point2){
+  
+  x = point2.x - point1.x
+  y = point2.y - point2.y
+  
+  return (sqrt(x * x + y * y))
+}
