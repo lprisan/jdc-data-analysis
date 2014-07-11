@@ -671,7 +671,7 @@ getContinuousValue <- function(tags,targetTags,contType){
         }
       }
         
-      }else if(contType=="C"){ #We need at least 3 tags, to calculate the center of the circunference
+      else if(contType=="C"){ #We need at least 3 tags, to calculate the center of the circunference
         
         # First manipulative: tag 1 <- 316, tag 2 <- 317
         # Second manipulative: tag 1 <- 321, tag 2 <- 322
@@ -693,10 +693,10 @@ getContinuousValue <- function(tags,targetTags,contType){
           originPoint <- c(x= mean(x1,x2), y= mean(y1,y3))
           
           #This is the center of the marker circunf_control (is a point2d)  
-          endPoint <- c(x = mean(presentCenter$corners[[1]],presentCenter$corners[[3]]),y = mean(presentCenter$corners[[4]],presentCenter$corners[[6]]) 
+          endPoint <- c(x = mean(presentCenter$corners[[1]],presentCenter$corners[[3]]),y = mean(presentCenter$corners[[4]],presentCenter$corners[[6]]))
           
           #Centroid of the tag [0] and [1] of the circular_origin marker (is a point2d)
-          startPoint <- c( x = mean(x1,x2) , y = mean(y1,y2)) 
+          startPoint <- c(x = mean(x1,x2) , y = mean(y1,y2)) 
             
             
           angle <- getVertexAngle(startPoint, originPoint, endPoint) #Check the parameters
