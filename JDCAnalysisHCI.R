@@ -1,5 +1,6 @@
 #require("lattice")
 require("ggplot2")
+require("reshape2")
 #require("Gmisc")
 #require("zoo")
 
@@ -21,7 +22,7 @@ JDCAnalysisHCI <- function(rootDir="."){
   # Survey data
   surveyData <- get(load(paste(rootDir,"/quests/","Survey.rda",sep="")))
   # TODO: Log data summary, or maybe two summaries, one global, another for the 9 groups in Act4?
-  #logdir <- paste(rootDir,"/logs",sep="")
+  logdir <- paste(rootDir,"/logs",sep="")
   #logData <- getLogSummaryHCI(logdir,mapsData)
   
   # We plot the different questions/themes we had
@@ -33,10 +34,19 @@ JDCAnalysisHCI <- function(rootDir="."){
   # Bad uses of the interface
   
   # Manipulative usage
+  manipulativeUsagePlots(act4UsageSummary)
   
   # Collaboration (ownership, awareness)
   
 }
+
+manipulativeUsagePlots <- function(act4UsageSummary){
+  
+  # TODO: Graphs about multiple usage stats in Act4
+  
+  
+}
+
 
 
 # This function tries to answer the following questions:
@@ -46,78 +56,86 @@ basicPreferencePlots <- function(surveyData, act4UsageSummary){
   
   # What do kids prefer / from survey
   png("Q1-LikeApproach.Boxplots.png",width=1280,height=1024)  
-  par(mfrow=c(1,3),cex.axis=0.75)
+  par(mfrow=c(1,3))
   boxplot(surveyData$Q1.More.Fun, ylim=c(1,5), main="Q1", sub="I prefer this way to what we do at school", xlab="Total")
   boxplot(surveyData$Q1.More.Fun ~ surveyData$Sequence, ylim=c(1,5), main="Q1", xlab="By sequence of fractions manipulative experienced",col=(c("lightgoldenrod","lightgreen")))
   boxplot(surveyData$Q1.More.Fun ~ surveyData$Sequence * surveyData$Session, ylim=c(1,5), main="Q1", xlab="By sequence AND session",col=(c("lightgoldenrod","lightgreen")))
   dev.off()
   
   png("Q2-PreferConcrete.Boxplots.png",width=1280,height=1024)  
-  par(mfrow=c(1,3),cex.axis=0.75)
+  par(mfrow=c(1,3))
   boxplot(surveyData$Q2.Concrete.Repr, ylim=c(1,5), main="Q2", sub="I prefer concrete (vs. symbolic) fraction manip.", xlab="Total")
   boxplot(surveyData$Q2.Concrete.Repr ~ surveyData$Sequence, ylim=c(1,5), main="Q2", xlab="By sequence of fractions manipulative experienced", col=(c("lightgoldenrod","lightgreen")))
   boxplot(surveyData$Q2.Concrete.Repr ~ surveyData$Sequence * surveyData$Session, ylim=c(1,5), main="Q2", xlab="By sequence AND session", col=(c("lightgoldenrod","lightgreen")))
   dev.off()
 
   png("Q3-PreferContinuous.Boxplots.png",width=1280,height=1024)  
-  par(mfrow=c(1,3),cex.axis=0.75)
+  par(mfrow=c(1,3))
   boxplot(surveyData$Q3.Continuous.Repr, ylim=c(1,5), main="Q3", sub="I prefer continuous (vs. token) fraction manip.", xlab="Total")
   boxplot(surveyData$Q3.Continuous.Repr ~ surveyData$Sequence, ylim=c(1,5), main="Q3", xlab="By sequence of fractions manipulative experienced", col=(c("lightgoldenrod","lightgreen")))
   boxplot(surveyData$Q3.Continuous.Repr ~ surveyData$Sequence * surveyData$Session, ylim=c(1,5), main="Q3", xlab="By sequence AND session", col=(c("lightgoldenrod","lightgreen")))
   dev.off()
 
   # How coherent are preferences within a group? range and std per group? Are there any outliers?
-#   agQ2sd <- aggregate(Q2.Concrete.Repr ~ Group.Name, surveyData, sd)
-#   agQ2range <- aggregate(Q2.Concrete.Repr ~ Group.Name, surveyData, range)
-#   agQ3sd <- aggregate(Q3.Continuous.Repr ~ Group.Name, surveyData, sd)
-#   agQ3range <- aggregate(Q3.Continuous.Repr ~ Group.Name, surveyData, range)
-#   
-#   png("Q2.Q3.Group.Coherence.Plot.png",width=1280,height=1024)
-#   par(mfrow=c(2,2),cex.axis=0.75)
-#   qplot(agQ2sd ~ surveyData$Group.Name,main="Q2 (concrete vs. abstract preference) SD",xlab="Groups")
-#   qplot(agQ2sd ~ surveyData$Group.Name,main="Q2 (concrete vs. abstract preference) Range",xlab="Groups")
-#   qplot(agQ2sd ~ surveyData$Group.Name,main="Q3 (continuous vs. discrete preference) SD",xlab="Groups")
-#   qplot(agQ2sd ~ surveyData$Group.Name,main="Q2 (continuous vs. discrete preference) Range",xlab="Groups")
-#   dev.off()
+  agQ2sd <- aggregate(Q2.Concrete.Repr ~ Group.Number, surveyData, sd)
+  agQ3sd <- aggregate(Q3.Continuous.Repr ~ Group.Number, surveyData, sd)
   
+  png("Q2.Group.Coherence.SD.Plot.png",width=1280,height=1024)
+  print(qplot(Group.Number, Q2.Concrete.Repr, data=agQ2sd, main="Q2 (concrete vs. abstract preference) SD",xlab="Groups"))
+  dev.off()
+  
+  png("Q3.Group.Coherence.SD.Plot.png",width=1280,height=1024)
+  print(qplot(Group.Number, Q3.Continuous.Repr, data=agQ3sd, main="Q3 (continuous vs. discrete preference) SD",xlab="Groups"))
+  dev.off()
+
   # What do kids use when given the choice (Act4)?
   png("Relative.Usage.Manips.Act4.Boxplots.png",width=1280,height=1024)  
-  boxplot(c(act4UsageSummary$Relative.Using.Cont.Act4,
-            act4UsageSummary$Relative.Using.Disc.Act4,
-            act4UsageSummary$Relative.Using.Frac.Act4), 
-          ylim=c(0,1), main="Manipulative usage in Act4", col=(c("lightgoldenrod","lightgreen","lightblue")))
+  par(mfrow=c(1,3))
+  boxplot(act4UsageSummary$Relative.Using.Cont.Act4,
+          ylim=c(0,1), main="Continuous Manipulative usage in Act4")
+  boxplot(act4UsageSummary$Relative.Using.Disc.Act4,
+        ylim=c(0,1), main="Discrete Manipulative usage in Act4")
+  boxplot(act4UsageSummary$Relative.Using.Frac.Act4, 
+        ylim=c(0,1), main="Symbolic Fraction usage in Act4")
   dev.off()
   png("Relative.Usage.Hints.Act4.Boxplots.png",width=1280,height=1024)  
-  boxplot(c(act4UsageSummary$Relative.Help.Circ.Act4,
-            act4UsageSummary$Relative.Help.Rect.Act4,
-            act4UsageSummary$Relative.Help.Disc.Act4,
-            act4UsageSummary$Relative.Help.Dec.Act4,
-            act4UsageSummary$Relative.Help.Frac.Act4), 
-          ylim=c(0,1), main="Manipulative usage in Act4", col=(c("lightgoldenrod","goldenrod","lightgreen","lightblue","blue")))
+  par(mfrow=c(1,5))
+  boxplot(act4UsageSummary$Relative.Help.Circ.Act4,
+          ylim=c(0,1), main="Circular Hint usage in Act4")
+  boxplot(act4UsageSummary$Relative.Help.Rect.Act4,
+          ylim=c(0,1), main="Rectangular Hint usage in Act4")
+  boxplot(act4UsageSummary$Relative.Help.Disc.Act4,
+          ylim=c(0,1), main="Discrete Hint usage in Act4")
+  boxplot(act4UsageSummary$Relative.Help.Dec.Act4,
+          ylim=c(0,1), main="Decimal Hint usage in Act4")
+  boxplot(act4UsageSummary$Relative.Help.Frac.Act4, 
+          ylim=c(0,1), main="Fraction Hint usage in Act4")
   dev.off()
   # TODO: We could do barplots of relative usage all the 9 groups, both for the manipulatives and for the hints, to see common patterns
 
   # How coherent is preference and usage when given the choice?
   # merge the log summary and the survey data
-  totalData <- merge(surveyData, act4UsageSummary, by="Group.Name")
+  totalData <- merge(surveyData, act4UsageSummary, by.x="Group.Number", by.y="Group.Name")
   # create a melt for plotting two variables in the same graphic
-  data <- totalData[,c("Q2.Concrete.Repr","Relative.Using.Frac","Relative.Using.Concr")]
-  data <- melt(, id.vars="Q2.Concrete.Repr")
+  data <- totalData[,c("Q2.Concrete.Repr","Relative.Using.Frac.Act4","Relative.Using.Concr.Act4")]
+  data <- melt(data, id.vars="Q2.Concrete.Repr")
 
   # Q2 vs Relative.Fraction and Relative.Concrete
   png("Concrete.Symbolic.Prefs.Usage.png",width=1280,height=1024)
-  ggplot(data, aes(x=Q2.Concrete.Repr, y=value, colour=variable)) + 
+  p <- ggplot(data, aes(x=Q2.Concrete.Repr, y=value, colour=variable)) + 
     ggtitle("Concrete vs. Symbolic / Preferences and usage") + 
-    geom_point(size=5,alpha=0.4) + geom_smooth(method="lm")
+    geom_point(size=5,alpha=0.4, position=position_jitter(width=0.05, height=0.01)) + geom_smooth(method="lm") + ylim(c(0,1))
+  plot(p)
   dev.off()
 
   # Q3 vs Relative.Cont and Relative.Disc
-  data <- totalData[,c("Q3.Continuous.Repr","Relative.Using.Cont","Relative.Using.Disc")]
-  data <- melt(, id.vars="Q3.Continuous.Repr")
+  data <- totalData[,c("Q3.Continuous.Repr","Relative.Using.Cont.Act4","Relative.Using.Disc.Act4")]
+  data <- melt(data, id.vars="Q3.Continuous.Repr")
   png("Continuous.Discrete.Prefs.Usage.png",width=1280,height=1024)
-  ggplot(data, aes(x=Q2.Concrete.Repr, y=value, colour=variable)) + 
+  p <- ggplot(data, aes(x=Q3.Continuous.Repr, y=value, colour=variable)) + 
     ggtitle("Concrete vs. Symbolic / Preferences and usage") + 
-    geom_point(size=5,alpha=0.4) + geom_smooth(method="lm")
+    geom_point(size=5,alpha=0.4, position=position_jitter(width=0.05, height=0.01)) + geom_smooth(method="lm") + ylim(c(0,1))
+  plot(p)
   dev.off()
 
 }
@@ -125,7 +143,7 @@ basicPreferencePlots <- function(surveyData, act4UsageSummary){
 
 # This function returns a data frame with a summary of the Log files, describing the usage that each group made 
 # of the different paper elements (manipulatives, hints, etc)
-getLogSummariesInclAct4 <- function(logdir,mapsData){
+getAct4UsageLogSummary <- function(logdir,mapsData){
   
   # We get the basic, overall summaries
   logSummary <- getLogSummaries(logdir)
@@ -198,7 +216,7 @@ getRangedLogSummaries <- function(logdir, globaldata, starts, ends){
     Using.Cont.Act4[i] <- sum(data$UsingCont)
     Using.Disc.Act4[i] <- sum(data$UsingDisc)
     Using.Frac.Act4[i] <- sum(data$UsingFrac)
-    Using.Concr.Act4[i] <- sum(data$UsingCont || data$UsingDisc)
+    Using.Concr.Act4[i] <- sum(data$UsingCont | data$UsingDisc)
     Help.Circ.Act4[i] <- sum(data$HelpContCirc)
     Help.Rect.Act4[i] <- sum(data$HelpContRect)
     Help.Disc.Act4[i] <- sum(data$HelpDiscrete)
@@ -233,6 +251,7 @@ getRangedLogSummaries <- function(logdir, globaldata, starts, ends){
                       Using.Cont.Act4,
                       Using.Disc.Act4,
                       Using.Frac.Act4,
+                      Using.Concr.Act4,
                       Help.Circ.Act4,
                       Help.Rect.Act4,
                       Help.Disc.Act4,
@@ -241,6 +260,7 @@ getRangedLogSummaries <- function(logdir, globaldata, starts, ends){
                       Relative.Using.Cont.Act4,
                       Relative.Using.Disc.Act4,
                       Relative.Using.Frac.Act4,
+                      Relative.Using.Concr.Act4,
                       Relative.Help.Circ.Act4,
                       Relative.Help.Rect.Act4,
                       Relative.Help.Disc.Act4,
