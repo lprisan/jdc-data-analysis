@@ -1,6 +1,7 @@
 #require("lattice")
 require("ggplot2")
 require("reshape2")
+require("plotrix")
 #require("Gmisc")
 #require("zoo")
 
@@ -18,9 +19,9 @@ JDCAnalysisHCI <- function(rootDir="."){
   
   #We load the different data sources
   # Basic map completion stats from video analysis
-  mapsData <- get(load(paste(rootDir,"/maps/","Maps.rda",sep="")))
+  #mapsData <- get(load(paste(rootDir,"/maps/","Maps.rda",sep="")))
   # Survey data
-  surveyData <- get(load(paste(rootDir,"/quests/","Survey.rda",sep="")))
+  #surveyData <- get(load(paste(rootDir,"/quests/","Survey.rda",sep="")))
   # TODO: Log data summary, or maybe two summaries, one global, another for the 9 groups in Act4?
   logdir <- paste(rootDir,"/logs",sep="")
   #logData <- getLogSummaryHCI(logdir,mapsData)
@@ -28,15 +29,17 @@ JDCAnalysisHCI <- function(rootDir="."){
   # We plot the different questions/themes we had
   # Basic plots of children preferences
   #basicPreferencePlots(surveyData, act4UsageSummary)
-  act4UsageSummary <- getAct4UsageLogSummary(logdir, mapsData)
-  basicPreferencePlots(surveyData, act4UsageSummary)
+  #act4UsageSummary <- getAct4UsageLogSummary(logdir, mapsData)
+  #basicPreferencePlots(surveyData, act4UsageSummary)
   
   # Bad uses of the interface
   
   # Manipulative usage
-  manipulativeUsagePlots(act4UsageSummary)
+  #manipulativeUsagePlots(act4UsageSummary)
   
   # Collaboration (ownership, awareness)
+  goPositionPlots(logdir)
+  
   
 }
 
@@ -139,6 +142,52 @@ basicPreferencePlots <- function(surveyData, act4UsageSummary){
   dev.off()
 
 }
+
+#This function tries to answer the following question:
+#Is there any location that is preferred to play the GO card? (All the activities)
+goPositionPlots <- function(logdir){
+  setwd (logdir)
+  
+  #For each file in logdir
+  for(file in list.files(path=logdir,pattern = "\\.rda$")){
+    data <- get(load(file))
+
+    #We get the data of the position
+    logGoPosition <- getGoPositiondata(data)
+    
+    #Get the name of the .png file
+    groupName <- basename(file)
+    groupName <-  substr(groupName, 1, nchar(groupName)-4)
+    name <- paste(groupName,".GoPosition.png",sep="")
+    
+    #Create the .png file of the position
+    png(name,width=1280,height=1024)
+    plot(logGoPosition$Position.Go.y ~ logGoPosition$Position.Go.x, type='l',xlim=c(0, 1280),ylim = c(768,0), col='green', axes=TRUE,xlab = "X [px]", ylab = "Y [px]", main = paste(groupName," Go card position",sep=""))
+    
+    #We draw the circles in each corner
+    draw.circle(0,0,384)
+    draw.circle(0,768,384)
+    draw.circle(1280,0,384)
+    draw.circle(1280,768,384)
+    
+    #We draw the map area, so we can see where was the Go card
+    rect(384,640,896,128, border = "blue")
+    dev.off()
+    
+    name <- paste(groupName, ".GoPosition.Over.Time.png",sep="")
+    
+    #Create the .png file of the position over time
+    png(name,width=1280,height=1024)
+    par(mfrow=c(2,1))
+    minTime <- min(logGoPosition$Timestamp)
+    maxTime <- max(logGoPosition$Timestamp)
+    plot(logGoPosition$Position.Go.x ~ logGoPosition$Timestamp,type='l', xlim = c(minTime,maxTime), ylim = c(0,1280), col='blue',axes = TRUE, xlab = "Time [ms]", ylab = "X position [px]", main = paste(groupName," Go card X position vs Time", sep = ""))
+    plot(logGoPosition$Position.Go.x ~ logGoPosition$Timestamp,type='l', xlim = c(minTime,maxTime), ylim = c(768,0), col='blue',axes = TRUE, xlab = "Time [ms]", ylab = "Y position [px]", main = paste(groupName," Go card Y position vs Time", sep = ""))
+    dev.off()
+    
+  }
+}
+
 
 
 # This function returns a data frame with a summary of the Log files, describing the usage that each group made 
@@ -280,6 +329,31 @@ getRangedLogSummaries <- function(logdir, globaldata, starts, ends){
   
 }
 
+getGoPositiondata <- function(data){
+   
+  fileLength <- length(data$timestamp)
+  #cat(str(data))
+ 
+  Position.Go.x = numeric(fileLength) #Go card
+  Position.Go.y = numeric(fileLength) #Go card
+  Timestamp = numeric(fileLength) #To see the evolution on time
+  #Rotation.Go = numeric(fileLength) #The rotation
+  
+  #For each row in the file
+  for(i in 1:fileLength){
+    Position.Go.x[[i]] <- data[i,"Position.Gox"]
+    Position.Go.y[[i]] <- data[i,"Position.Goy"]
+    
+    Timestamp[i] <- data[i,"timestamp"]
+    #Rotation.Go[i] <- data[i,"Rotation.Go"]
+  }
+    
+  act4Log <- data.frame(Position.Go.x, Position.Go.y,Timestamp)
+  
+  act4LogClean <- na.omit(act4Log)
+  act4LogClean
+}
+
 # This function gets basic log statistics for each group (e.g. total duration available, 
 # total samples available, samples with each kind of representation on table, samples 
 # with each kind of help on table, in absolute samples and percentage of existing samples)
@@ -382,4 +456,3 @@ addElementUsageVariables <- function(data){
   
   return(data)
 }
-
