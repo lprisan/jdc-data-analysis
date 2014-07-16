@@ -50,7 +50,7 @@ JDCExplorations <- function(rootDir="."){
   # We get the teacher's eyetracking data
   eyedir <- paste(rootDir,"/eyetrack",sep="")
   setwd(eyedir)
-  eyedata <- get(load("Eyetracker.rda"))
+  eyedata <- get(load("EyetrackerEvents.rda"))
   # We do some basic plotting of eyetracking parameters
   eyetrackerPlots(eyedata)
 
