@@ -43,7 +43,17 @@ JDCAnalysisHCI <- function(rootDir="."){
 manipulativeUsagePlots <- function(act4UsageSummary){
   
   # TODO: Graphs about multiple usage stats in Act4
+  act4UsageSummary$Relative.Usage.Single.Act4 <- act4UsageSummary$Relative.Usage.Sole.Cont.Act4 + act4UsageSummary$Relative.Usage.Sole.Disc.Act4 + act4UsageSummary$Relative.Usage.Sole.Frac.Act4
+  act4UsageSummary$Relative.Usage.Multiple.Act4 <- act4UsageSummary$Relative.Usage.Cont.Disc.Act4 + act4UsageSummary$Relative.Usage.Disc.Frac.Act4 + act4UsageSummary$Relative.Usage.Frac.Cont.Act4 + act4UsageSummary$Relative.Usage.All.Act4
+  data <- act4UsageSummary[!is.na(act4UsageSummary$Relative.Usage.Single.Act4),c("Group.Name","Relative.Usage.Single.Act4","Relative.Usage.Multiple.Act4","Relative.Usage.None.Act4")]
+  data <- melt(data,id.vars="Group.Name")
   
+  png("Single.Multiple.Manip.Usage.Act4.png",width=1280,height=1024)  
+  p <- ggplot(data, aes(x=Group.Name, y=value, fill=variable)) + 
+    ggtitle("Usage of single/multiple representations in Act4") + 
+    geom_bar(position="fill", stat="identity")
+  print(p)
+  dev.off()
   
 }
 
