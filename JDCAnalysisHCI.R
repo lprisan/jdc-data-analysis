@@ -38,7 +38,9 @@ JDCAnalysisHCI <- function(rootDir="."){
   #manipulativeUsagePlots(act4UsageSummary)
   
   # Collaboration (ownership, awareness)
-  goPositionPlots(logdir)
+  #goPositionPlots(logdir)
+  #fractionValuePlots(logdir)
+  goRotationPlots(logdir)
   
   
 }
@@ -145,6 +147,48 @@ basicPreferencePlots <- function(surveyData, act4UsageSummary){
 
 #This function tries to answer the following question:
 #Is there any location that is preferred to play the GO card? (All the activities)
+fractionValuePlots <- function(logdir){
+  setwd (logdir)
+  
+  #For each file in logdir
+  for(file in list.files(path=logdir,pattern = "\\.rda$")){
+    data <- get(load(file))
+    
+    #We get the data of the position
+    logFractionData <- getFractionValueData(data)
+    
+    #Get the name of the .png file
+    groupName <- basename(file)
+    groupName <-  substr(groupName, 1, nchar(groupName)-4)
+    name <- paste(groupName,".Circular.Values.png",sep="")
+    
+    minTime <- min(logFractionData$Timestamp)
+    maxTime <- max(logFractionData$Timestamp)
+    minFraction <- min (logFractionData$Timestamp)
+    
+    #Create the .png file of the position
+    png(name,width=1280,height=1024)
+    par(mfrow=c(2,1))
+    plot(logFractionData$Value.C1 ~ logFractionData$Timestamp, type='l',xlim=c(minTime, maxTime),ylim = c(0,max(logFractionData$Value.C1)), col='green', axes=TRUE,xlab = "Time [ms]", ylab = "Fraction", main = paste(groupName," Circular (1) Value vs Time",sep=""))
+    plot(logFractionData$Value.C2 ~ logFractionData$Timestamp, type='l',xlim=c(minTime, maxTime),ylim = c(0,max(logFractionData$Value.C2)), col='green', axes=TRUE,xlab = "Time [ms]", ylab = "Fraction", main = paste(groupName," Circular (2) Value vs Time",sep=""))
+    
+    dev.off()
+    
+    name <- paste(groupName, ".Rectangular.Values.png",sep="")
+    
+    png(name,width=1280,height=1024)
+    par(mfrow=c(2,1))
+    plot(logFractionData$Value.R1 ~ logFractionData$Timestamp, type='l',xlim=c(minTime, maxTime),ylim = c(0,max(logFractionData$Value.R1)), col='green', axes=TRUE,xlab = "Time [ms]", ylab = "Fraction", main = paste(groupName," Rectangular (1) Value vs Time",sep=""))
+    plot(logFractionData$Value.R2 ~ logFractionData$Timestamp, type='l',xlim=c(minTime, maxTime),ylim = c(0,max(logFractionData$Value.R2)), col='green', axes=TRUE,xlab = "Time [ms]", ylab = "Fraction", main = paste(groupName," Rectangular (2) Value vs Time",sep=""))
+    
+    dev.off()
+    
+    
+  }
+}
+
+#This function tries to answer the following question:
+#Is there any location that is preferred to play the GO card? (All the activities)
 goPositionPlots <- function(logdir){
   setwd (logdir)
   
@@ -162,7 +206,7 @@ goPositionPlots <- function(logdir){
     
     #Create the .png file of the position
     png(name,width=1280,height=1024)
-    plot(logGoPosition$Position.Go.y ~ logGoPosition$Position.Go.x, type='l',xlim=c(0, 1280),ylim = c(768,0), col='green', axes=TRUE,xlab = "X [px]", ylab = "Y [px]", main = paste(groupName," Go card position",sep=""))
+    plot(logGoPosition$Position.Go.y ~ logGoPosition$Position.Go.x, cex = 4,pch=1,xlim=c(0, 1280),ylim = c(768,0), col=rgb(red=0.2, green=0.2, blue=1.0, alpha=0.08), axes=TRUE,xlab = "X [px]", ylab = "Y [px]", main = paste(groupName," Go card position",sep=""))
     
     #We draw the circles in each corner
     draw.circle(0,0,384)
@@ -188,7 +232,42 @@ goPositionPlots <- function(logdir){
   }
 }
 
+goRotationPlots <- function(logdir){
+  setwd (logdir)
+  
+  #For each file in logdir
+  for(file in list.files(path=logdir,pattern = "\\.rda$")){
+    data <- get(load(file))
+    
+    #We get the data of the position
+    logGoPosition <- getGoPositiondata(data)
+   
+    logGoRotation <- data.frame(logGoPosition$Rotation.Go,logGoPosition$Timestamp)
 
+    #Get the name of the .png file
+    groupName <- basename(file)
+    groupName <-  substr(groupName, 1, nchar(groupName)-4)
+    name <- paste(groupName,".Go.Rotation.Over.Time.png",sep="")
+    
+    
+    #Create the .png file of the position
+    png(name,width=1280,height=1024)
+    plot(logGoRotation$logGoPosition.Rotation.Go ~ logGoRotation$logGoPosition.Timestamp, pch = 1, cex = 4,col=rgb(red=0.0, green=0.8, blue=0.0, alpha=0.08),xlim=c(min(logGoRotation$logGoPosition.Timestamp), max(logGoRotation$logGoPosition.Timestamp)),ylim = c(0,2*pi), axes=TRUE,xlab = "Time [ms]", ylab = "Rotation [rad]", main = paste(groupName," Go card rotation vs Time",sep=""))
+    abline(a = 0, b = 0,col = 'blue')
+    abline(a = pi/4, b = 0,col = 'blue')
+    abline(a = pi/2, b = 0,col = 'blue')
+    abline(a = 3*pi/4, b = 0,col = 'blue')
+    abline(a = pi, b = 0,col = 'blue')
+    abline(a = 5*pi/4, b = 0,col = 'blue')
+    abline(a = 3*pi/2, b = 0,col = 'blue')
+    abline(a = 7*pi/4, b = 0,col = 'blue')
+    abline(a = 2*pi, b = 0,col = 'blue')
+
+    dev.off()
+    
+    
+  }
+}
 
 # This function returns a data frame with a summary of the Log files, describing the usage that each group made 
 # of the different paper elements (manipulatives, hints, etc)
@@ -329,6 +408,33 @@ getRangedLogSummaries <- function(logdir, globaldata, starts, ends){
   
 }
 
+getFractionValueData <- function(data){
+  
+  fileLength <- length(data$timestamp)
+
+  #We need the value of each continuous representation: C1, C2, R1 and R2
+  Value.C1 = numeric(fileLength) #Circular 1
+  Value.C2 = numeric(fileLength) #Circular 2
+  Value.R1 = numeric(fileLength) #Rectangular 1
+  Value.R2 = numeric(fileLength) #Rectangular 2
+  Timestamp = numeric(fileLength) #To see the evolution on time
+  
+  #For each row in the file
+  for(i in 1:fileLength){
+    Value.C1[[i]] <- data[i,"Value.C1"]
+    Value.C2[[i]] <- data[i,"Value.C2"]
+    Value.R1[[i]] <- data[i,"Value.R1"]
+    Value.R2[[i]] <- data[i,"Value.R2"]
+    Timestamp[[i]] <- data[i,"timestamp"]
+    
+  }
+  
+  fractionValueLog <- data.frame(Value.C1,Value.C2,Value.R1,Value.R2,Timestamp)
+  
+  fractionValueLogClean <- na.omit(fractionValueLog)
+  fractionValueLogClean
+}
+
 getGoPositiondata <- function(data){
    
   fileLength <- length(data$timestamp)
@@ -337,18 +443,18 @@ getGoPositiondata <- function(data){
   Position.Go.x = numeric(fileLength) #Go card
   Position.Go.y = numeric(fileLength) #Go card
   Timestamp = numeric(fileLength) #To see the evolution on time
-  #Rotation.Go = numeric(fileLength) #The rotation
+  Rotation.Go = numeric(fileLength) #The rotation
   
   #For each row in the file
   for(i in 1:fileLength){
     Position.Go.x[[i]] <- data[i,"Position.Gox"]
     Position.Go.y[[i]] <- data[i,"Position.Goy"]
-    
-    Timestamp[i] <- data[i,"timestamp"]
-    #Rotation.Go[i] <- data[i,"Rotation.Go"]
+
+    Timestamp[[i]] <- data[i,"timestamp"]
+    Rotation.Go[[i]] <- data[i,"Rotation.Go"]
   }
     
-  act4Log <- data.frame(Position.Go.x, Position.Go.y,Timestamp)
+  act4Log <- data.frame(Position.Go.x, Position.Go.y,Timestamp,Rotation.Go)
   
   act4LogClean <- na.omit(act4Log)
   act4LogClean
