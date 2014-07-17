@@ -66,6 +66,8 @@ JDCEyetrackPreprocess <- function(rootDir="."){
     if(length(sacdata) == 1) sacdata <- data.frame(filedata) # This is the first file
     else sacdata <- rbind(sacdata,filedata) # The global data frame exists, just add to it
   }
+  # We add the saccade speed for each saccade
+  sacdata$Saccade.Speed <- sacdata$Amplitude.... / sacdata$Saccade.Duration..ms.
   
   # We split the data per session
   pupildata$Session <- as.factor(pupildata$Session)
