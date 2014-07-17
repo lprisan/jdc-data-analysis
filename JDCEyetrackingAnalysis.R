@@ -29,7 +29,7 @@ countLong <- function(x){
 }
 
 # This one accepts window size in seconds, and window slide in seconds too
-jointEyetrackerPlots <- function(pupildata, fixdata, sacdata, window=30, slide=5){
+jointEyetrackerPlots <- function(pupildata, fixdata, sacdata, window=30, slide=5, meanormedian="median"){
  
   # We get the data for each session
   pupildata$Session <- as.factor(pupildata$Session)
@@ -40,34 +40,100 @@ jointEyetrackerPlots <- function(pupildata, fixdata, sacdata, window=30, slide=5
   sacsessions <- split(sacdata,sacdata$Session)
   
   
-  for(i in 1:1){
+  for(i in 1:length(pupilsessions)){
     
     
     
-    png(paste("Eyetrack.Session",pupilsessions[[i]]$Session[[1]],".png",sep=""),width=1280,height=1024)  
+    png(paste("Eyetrack.Session",pupilsessions[[i]]$Session[[1]],".window",window,"s.slide",slide,"s.",meanormedian,".png",sep=""),width=1280,height=1024)  
     
     # We get the PD mean over a rolling window with the parameters set when calling the function (everything in ms)
     meandata <- rollingMean(pupilsessions[[i]]$Time.ms,pupilsessions[[i]]$L.Pupil.Diameter..mm.,window*1000,slide*1000)
-    meansessionavg <- mean(meandata$value)
+    meansessionavg <- 0
+    if(meanormedian=="median") meansessionavg <- median(meandata$value)
+    else meansessionavg <- mean(meandata$value)
     p1 <- ggplot(meandata, aes(x=time, y=value)) + 
       ggtitle(paste("Pupil diameter MEAN over ",window,"s",sep="")) + 
       geom_line() + geom_hline(yintercept=meansessionavg)
 
-    # We get the PD mean over a rolling window with the parameters set when calling the function (everything in ms)
+    # We get the PD standard deviation over a rolling window with the parameters set when calling the function (everything in ms)
     sddata <- rollingSd(pupilsessions[[i]]$Time.ms,pupilsessions[[i]]$L.Pupil.Diameter..mm.,window*1000,slide*1000)
-    sdsessionavg <- mean(sddata$value)
+    sdsessionavg <- 0
+    if(meanormedian=="median") sdsessionavg <- median(sddata$value)
+    else sdsessionavg <- mean(sddata$value)
     p2 <- ggplot(sddata, aes(x=time, y=value)) + 
       ggtitle(paste("Pupil diameter SD over ",window,"s",sep="")) + 
       geom_line() + geom_hline(yintercept=sdsessionavg)
     
+    # We get the number of long fixations in the window
+    longdata <- rollingLong(fixsessions[[i]]$Time.ms,fixsessions[[i]]$Fixation.Duration..ms.,window*1000,slide*1000)
+    longsessionavg <- 0
+    if(meanormedian=="median") longsessionavg <- median(longdata$value)
+    else longsessionavg <- mean(longdata$value)
+    p3 <- ggplot(longdata, aes(x=time, y=value)) + 
+      ggtitle(paste("Fixations >500ms over ",window,"s",sep="")) + 
+      geom_line() + geom_hline(yintercept=longsessionavg)
+
+    # We get the saccade speed in the window
+    sacspdata <- rollingMean(sacsessions[[i]]$Time.ms,sacsessions[[i]]$Saccade.Speed,window*1000,slide*1000)
+    sacsessionavg <- 0
+    if(meanormedian=="median") sacsessionavg <- median(sacspdata$value)
+    else sacsessionavg <- mean(sacspdata$value)
+    p4 <- ggplot(sacspdata, aes(x=time, y=value)) + 
+      ggtitle(paste("Saccade speed over ",window,"s",sep="")) + 
+      geom_line() + geom_hline(yintercept=sacsessionavg)
+
+    # We try to get how many measures went over the average at a given point in time... 
+    # first, we merge all data frames
+    totaldata <- merge(meandata,sddata,by="time",suffixes = c(".Mean",".SD"),all=T)
+    totaldata <- merge(totaldata,longdata,by="time",suffixes = c("", ".Fix"),all=T)
+    totaldata <- merge(totaldata,sacspdata,by="time",suffixes = c("",".Sac"),all=T)
+    names(totaldata)[[4]] <- "value.Fix"
     
+    #cat(paste("All 4 metrics merged for session ",pupilsessions[[i]]$Session[[1]],". Incomplete cases: ",sum(!complete.cases(totaldata)),sep=""))
     
-    multiplot(p1, p2, cols=1)
+    totaldata$Above.Mean <- as.numeric(totaldata$value.Mean > meansessionavg)
+    totaldata$Above.SD <- as.numeric(totaldata$value.SD > sdsessionavg)
+    totaldata$Above.Fix <- as.numeric(totaldata$value.Fix > longsessionavg)
+    totaldata$Above.Sac <- as.numeric(totaldata$value.Sac > sacsessionavg)
+    totaldata$Load <- totaldata$Above.Mean + totaldata$Above.SD + totaldata$Above.Fix + totaldata$Above.Sac
+    
+    p5 <- ggplot(totaldata, aes(x=time, y=Load)) + 
+      ggtitle(paste("Estimation of cognitive overload over ",window,"s",sep="")) + 
+      geom_line()
+    
+    multiplot(p1, p2, p3, p4, p5, cols=1)
     dev.off()
     
+      
+  }
+  
+}
+
+# We get the number of values over a value in a rolling window with the parameters set when calling the function (everything in ms)
+# Returns a data frame with the time of each window (halfway point of each window) and the mean of the points within that window
+# times and values should have the same length
+rollingLong <- function(times,values,window,slide,threshold=500){
+  
+  inittime <- 0
+  endtime <- window
+  
+  rolllong <- data.frame(time=numeric(), value=numeric())
+  
+  while(endtime <= max(times)){
     
+    tim <- inittime + (window/2)
+    
+    val <- sum(times >= inittime & times <= endtime & values > threshold)
+    
+    if(nrow(rolllong)==0) rolllong <- data.frame(time=tim,value=val)
+    else rolllong <- rbind(rolllong,c(time=tim,value=val))
+    
+    inittime <- inittime+slide
+    endtime <- endtime+slide
     
   }
+  
+  rolllong
   
 }
 
