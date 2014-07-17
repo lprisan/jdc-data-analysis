@@ -13,8 +13,9 @@ JDCEyetrackingAnalysis <- function(rootDir="."){
   
   setwd(originalDir)
   # We do some basic plotting of eyetracking parameters
-  eyetrackerPlots(pupildata, fixdata, sacdata)
+  basicEyetrackerPlots(pupildata, fixdata, sacdata)
   
+  jointEyetrackerPlots(pupildata, fixdata, sacdata)
   
 }
 
@@ -27,12 +28,115 @@ countLong <- function(x){
   number
 }
 
+# This one accepts window size in seconds, and window slide in seconds too
+jointEyetrackerPlots <- function(pupildata, fixdata, sacdata, window=30, slide=5){
+ 
+  # We get the data for each session
+  pupildata$Session <- as.factor(pupildata$Session)
+  pupilsessions <- split(pupildata,pupildata$Session)
+  fixdata$Session <- as.factor(fixdata$Session)
+  fixsessions <- split(fixdata,fixdata$Session)
+  sacdata$Session <- as.factor(sacdata$Session)
+  sacsessions <- split(sacdata,sacdata$Session)
+  
+  
+  for(i in 1:1){
+    
+    
+    
+    png(paste("Eyetrack.Session",pupilsessions[[i]]$Session[[1]],".png",sep=""),width=1280,height=1024)  
+    
+    # We get the PD mean over a rolling window with the parameters set when calling the function (everything in ms)
+    meandata <- rollingMean(pupilsessions[[i]]$Time.ms,pupilsessions[[i]]$L.Pupil.Diameter..mm.,window*1000,slide*1000)
+    meansessionavg <- mean(meandata$value)
+    p1 <- ggplot(meandata, aes(x=time, y=value)) + 
+      ggtitle(paste("Pupil diameter MEAN over ",window,"s",sep="")) + 
+      geom_line() + geom_hline(yintercept=meansessionavg)
+
+    # We get the PD mean over a rolling window with the parameters set when calling the function (everything in ms)
+    sddata <- rollingSd(pupilsessions[[i]]$Time.ms,pupilsessions[[i]]$L.Pupil.Diameter..mm.,window*1000,slide*1000)
+    sdsessionavg <- mean(sddata$value)
+    p2 <- ggplot(sddata, aes(x=time, y=value)) + 
+      ggtitle(paste("Pupil diameter SD over ",window,"s",sep="")) + 
+      geom_line() + geom_hline(yintercept=sdsessionavg)
+    
+    
+    
+    multiplot(p1, p2, cols=1)
+    dev.off()
+    
+    
+    
+  }
+  
+}
+
+
+# We get the mean over a rolling window with the parameters set when calling the function (everything in ms)
+# Returns a data frame with the time of each window (halfway point of each window) and the mean of the points within that window
+# times and values should have the same length
+rollingMean <- function(times,values,window,slide){
+  
+  inittime <- 0
+  endtime <- window
+  
+  rollmean <- data.frame(time=numeric(), value=numeric())
+  
+  while(endtime <= max(times)){
+    
+    tim <- inittime + (window/2)
+    
+    val <- mean(values[times >= inittime & times <= endtime])
+    
+    if(nrow(rollmean)==0) rollmean <- data.frame(time=tim,value=val)
+    else rollmean <- rbind(rollmean,c(time=tim,value=val))
+    
+    inittime <- inittime+slide
+    endtime <- endtime+slide
+    
+  }
+  
+  rollmean
+  
+}
+
+# We get the PD mean over a rolling window with the parameters set when calling the function (everything in ms)
+# Returns a data frame with the time of each window (halfway point of each window) and the mean of the points within that window
+# times and values should have the same length
+rollingSd <- function(times,values,window,slide){
+  
+  inittime <- 0
+  endtime <- window
+  
+  rollsd <- data.frame(time=numeric(), value=numeric())
+  
+  while(endtime <= max(times)){
+    
+    tim <- inittime + (window/2)
+    
+    val <- sd(values[times >= inittime & times <= endtime])
+    
+    if(nrow(rollsd)==0) rollsd <- data.frame(time=tim,value=val)
+    else rollsd <- rbind(rollsd,c(time=tim,value=val))
+    
+    inittime <- inittime+slide
+    endtime <- endtime+slide
+    
+  }
+  
+  rollsd
+  
+}
+
+
+
+
 
 # This function receives a data frame with eyetracking events (pupil diameter), and it
 # draws basic line plots regarding their evolution over time (using a sliding window)
 # Currently, calculates mean and standard deviation over the defined windows
 # The default window size is 10s (300 samples), with 10 samples window slide
-eyetrackerPlots <- function(pupildata, fixdata, sacdata, window=300, slide=10){
+basicEyetrackerPlots <- function(pupildata, fixdata, sacdata, window=300, slide=10){
   
   # We split each session's data, and put it into a list
   pupildata$Session <- as.factor(pupildata$Session)
@@ -102,3 +206,51 @@ eyetrackerPlots <- function(pupildata, fixdata, sacdata, window=300, slide=10){
   
   
 }
+
+
+# Multiple plot function, from http://www.cookbook-r.com/Graphs/Multiple_graphs_on_one_page_(ggplot2)/
+#
+# ggplot objects can be passed in ..., or to plotlist (as a list of ggplot objects)
+# - cols:   Number of columns in layout
+# - layout: A matrix specifying the layout. If present, 'cols' is ignored.
+#
+# If the layout is something like matrix(c(1,2,3,3), nrow=2, byrow=TRUE),
+# then plot 1 will go in the upper left, 2 will go in the upper right, and
+# 3 will go all the way across the bottom.
+#
+multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
+  require(grid)
+  
+  # Make a list from the ... arguments and plotlist
+  plots <- c(list(...), plotlist)
+  
+  numPlots = length(plots)
+  
+  # If layout is NULL, then use 'cols' to determine layout
+  if (is.null(layout)) {
+    # Make the panel
+    # ncol: Number of columns of plots
+    # nrow: Number of rows needed, calculated from # of cols
+    layout <- matrix(seq(1, cols * ceiling(numPlots/cols)),
+                     ncol = cols, nrow = ceiling(numPlots/cols))
+  }
+  
+  if (numPlots==1) {
+    print(plots[[1]])
+    
+  } else {
+    # Set up the page
+    grid.newpage()
+    pushViewport(viewport(layout = grid.layout(nrow(layout), ncol(layout))))
+    
+    # Make each plot, in the correct location
+    for (i in 1:numPlots) {
+      # Get the i,j matrix positions of the regions that contain this subplot
+      matchidx <- as.data.frame(which(layout == i, arr.ind = TRUE))
+      
+      print(plots[[i]], vp = viewport(layout.pos.row = matchidx$row,
+                                      layout.pos.col = matchidx$col))
+    }
+  }
+}
+
