@@ -99,14 +99,32 @@ jointEyetrackerPlots <- function(pupildata, fixdata, sacdata, window=30, slide=5
     
     p5 <- ggplot(totaldata, aes(x=time, y=Load)) + 
       ggtitle(paste("Estimation of cognitive overload over ",window,"s",sep="")) + 
-      geom_line()
+      geom_line() #+ stat_smooth(method="loess",span=0.1)
     
     multiplot(p1, p2, p3, p4, p5, cols=1)
     dev.off()
+   
+    interesting <- totaldata[totaldata$Load>=max(totaldata$Load),"time"]
     
-      
+    dataToLook <- as.data.frame(interesting)
+    names(dataToLook) <- "Time.ms"
+    dataToLook$Time.min <- msToMinSec(interesting)
+    dataToLook$Session <- pupilsessions[[i]]$Session[[1]]
+    dataToLook$Load <- max(totaldata$Load)
+    
+    write.csv(dataToLook, file=paste("Loaded.Times.Session.",pupilsessions[[i]]$Session[[1]],".csv",sep=""))
+    
   }
   
+}
+
+
+msToMinSec <- function(millis){
+  mins <- floor(millis/60000)
+  secs <- (millis - (mins*60000))/1000
+  
+  string <- paste(mins,"m",as.character(secs),"s",sep="")
+  string
 }
 
 # We get the number of values over a value in a rolling window with the parameters set when calling the function (everything in ms)
