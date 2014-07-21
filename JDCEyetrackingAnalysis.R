@@ -13,8 +13,9 @@ JDCEyetrackingAnalysis <- function(rootDir="."){
   
   setwd(originalDir)
   # We do some basic plotting of eyetracking parameters
-  eyetrackerPlots(pupildata, fixdata, sacdata)
+  basicEyetrackerPlots(pupildata, fixdata, sacdata)
   
+  jointEyetrackerPlots(pupildata, fixdata, sacdata)
   
 }
 
@@ -27,12 +28,199 @@ countLong <- function(x){
   number
 }
 
+# This one accepts window size in seconds, and window slide in seconds too
+jointEyetrackerPlots <- function(pupildata, fixdata, sacdata, window=30, slide=5, meanormedian="median"){
+ 
+  # We get the data for each session
+  pupildata$Session <- as.factor(pupildata$Session)
+  pupilsessions <- split(pupildata,pupildata$Session)
+  fixdata$Session <- as.factor(fixdata$Session)
+  fixsessions <- split(fixdata,fixdata$Session)
+  sacdata$Session <- as.factor(sacdata$Session)
+  sacsessions <- split(sacdata,sacdata$Session)
+  
+  
+  for(i in 1:length(pupilsessions)){
+    
+    
+    
+    png(paste("Eyetrack.Session",pupilsessions[[i]]$Session[[1]],".window",window,"s.slide",slide,"s.",meanormedian,".png",sep=""),width=1280,height=1024)  
+    
+    # We get the PD mean over a rolling window with the parameters set when calling the function (everything in ms)
+    meandata <- rollingMean(pupilsessions[[i]]$Time.ms,pupilsessions[[i]]$L.Pupil.Diameter..mm.,window*1000,slide*1000)
+    meansessionavg <- 0
+    if(meanormedian=="median") meansessionavg <- median(meandata$value)
+    else meansessionavg <- mean(meandata$value)
+    p1 <- ggplot(meandata, aes(x=time, y=value)) + 
+      ggtitle(paste("Pupil diameter MEAN over ",window,"s",sep="")) + 
+      geom_line() + geom_hline(yintercept=meansessionavg)
+
+    # We get the PD standard deviation over a rolling window with the parameters set when calling the function (everything in ms)
+    sddata <- rollingSd(pupilsessions[[i]]$Time.ms,pupilsessions[[i]]$L.Pupil.Diameter..mm.,window*1000,slide*1000)
+    sdsessionavg <- 0
+    if(meanormedian=="median") sdsessionavg <- median(sddata$value)
+    else sdsessionavg <- mean(sddata$value)
+    p2 <- ggplot(sddata, aes(x=time, y=value)) + 
+      ggtitle(paste("Pupil diameter SD over ",window,"s",sep="")) + 
+      geom_line() + geom_hline(yintercept=sdsessionavg)
+    
+    # We get the number of long fixations in the window
+    longdata <- rollingLong(fixsessions[[i]]$Time.ms,fixsessions[[i]]$Fixation.Duration..ms.,window*1000,slide*1000)
+    longsessionavg <- 0
+    if(meanormedian=="median") longsessionavg <- median(longdata$value)
+    else longsessionavg <- mean(longdata$value)
+    p3 <- ggplot(longdata, aes(x=time, y=value)) + 
+      ggtitle(paste("Fixations >500ms over ",window,"s",sep="")) + 
+      geom_line() + geom_hline(yintercept=longsessionavg)
+
+    # We get the saccade speed in the window
+    sacspdata <- rollingMean(sacsessions[[i]]$Time.ms,sacsessions[[i]]$Saccade.Speed,window*1000,slide*1000)
+    sacsessionavg <- 0
+    if(meanormedian=="median") sacsessionavg <- median(sacspdata$value)
+    else sacsessionavg <- mean(sacspdata$value)
+    p4 <- ggplot(sacspdata, aes(x=time, y=value)) + 
+      ggtitle(paste("Saccade speed over ",window,"s",sep="")) + 
+      geom_line() + geom_hline(yintercept=sacsessionavg)
+
+    # We try to get how many measures went over the average at a given point in time... 
+    # first, we merge all data frames
+    totaldata <- merge(meandata,sddata,by="time",suffixes = c(".Mean",".SD"),all=T)
+    totaldata <- merge(totaldata,longdata,by="time",suffixes = c("", ".Fix"),all=T)
+    totaldata <- merge(totaldata,sacspdata,by="time",suffixes = c("",".Sac"),all=T)
+    names(totaldata)[[4]] <- "value.Fix"
+    
+    #cat(paste("All 4 metrics merged for session ",pupilsessions[[i]]$Session[[1]],". Incomplete cases: ",sum(!complete.cases(totaldata)),sep=""))
+    
+    totaldata$Above.Mean <- as.numeric(totaldata$value.Mean > meansessionavg)
+    totaldata$Above.SD <- as.numeric(totaldata$value.SD > sdsessionavg)
+    totaldata$Above.Fix <- as.numeric(totaldata$value.Fix > longsessionavg)
+    totaldata$Above.Sac <- as.numeric(totaldata$value.Sac > sacsessionavg)
+    totaldata$Load <- totaldata$Above.Mean + totaldata$Above.SD + totaldata$Above.Fix + totaldata$Above.Sac
+    
+    p5 <- ggplot(totaldata, aes(x=time, y=Load)) + 
+      ggtitle(paste("Estimation of cognitive overload over ",window,"s",sep="")) + 
+      geom_line() #+ stat_smooth(method="loess",span=0.1)
+    
+    multiplot(p1, p2, p3, p4, p5, cols=1)
+    dev.off()
+   
+    interesting <- totaldata[totaldata$Load>=max(totaldata$Load),"time"]
+    
+    dataToLook <- as.data.frame(interesting)
+    names(dataToLook) <- "Time.ms"
+    dataToLook$Time.min <- msToMinSec(interesting)
+    dataToLook$Session <- pupilsessions[[i]]$Session[[1]]
+    dataToLook$Load <- max(totaldata$Load)
+    
+    write.csv(dataToLook, file=paste("Loaded.Times.Session.",pupilsessions[[i]]$Session[[1]],".csv",sep=""))
+    
+  }
+  
+}
+
+
+msToMinSec <- function(millis){
+  mins <- floor(millis/60000)
+  secs <- (millis - (mins*60000))/1000
+  
+  string <- paste(mins,"m",as.character(secs),"s",sep="")
+  string
+}
+
+# We get the number of values over a value in a rolling window with the parameters set when calling the function (everything in ms)
+# Returns a data frame with the time of each window (halfway point of each window) and the mean of the points within that window
+# times and values should have the same length
+rollingLong <- function(times,values,window,slide,threshold=500){
+  
+  inittime <- 0
+  endtime <- window
+  
+  rolllong <- data.frame(time=numeric(), value=numeric())
+  
+  while(endtime <= max(times)){
+    
+    tim <- inittime + (window/2)
+    
+    val <- sum(times >= inittime & times <= endtime & values > threshold)
+    
+    if(nrow(rolllong)==0) rolllong <- data.frame(time=tim,value=val)
+    else rolllong <- rbind(rolllong,c(time=tim,value=val))
+    
+    inittime <- inittime+slide
+    endtime <- endtime+slide
+    
+  }
+  
+  rolllong
+  
+}
+
+
+# We get the mean over a rolling window with the parameters set when calling the function (everything in ms)
+# Returns a data frame with the time of each window (halfway point of each window) and the mean of the points within that window
+# times and values should have the same length
+rollingMean <- function(times,values,window,slide){
+  
+  inittime <- 0
+  endtime <- window
+  
+  rollmean <- data.frame(time=numeric(), value=numeric())
+  
+  while(endtime <= max(times)){
+    
+    tim <- inittime + (window/2)
+    
+    val <- mean(values[times >= inittime & times <= endtime])
+    
+    if(nrow(rollmean)==0) rollmean <- data.frame(time=tim,value=val)
+    else rollmean <- rbind(rollmean,c(time=tim,value=val))
+    
+    inittime <- inittime+slide
+    endtime <- endtime+slide
+    
+  }
+  
+  rollmean
+  
+}
+
+# We get the PD mean over a rolling window with the parameters set when calling the function (everything in ms)
+# Returns a data frame with the time of each window (halfway point of each window) and the mean of the points within that window
+# times and values should have the same length
+rollingSd <- function(times,values,window,slide){
+  
+  inittime <- 0
+  endtime <- window
+  
+  rollsd <- data.frame(time=numeric(), value=numeric())
+  
+  while(endtime <= max(times)){
+    
+    tim <- inittime + (window/2)
+    
+    val <- sd(values[times >= inittime & times <= endtime])
+    
+    if(nrow(rollsd)==0) rollsd <- data.frame(time=tim,value=val)
+    else rollsd <- rbind(rollsd,c(time=tim,value=val))
+    
+    inittime <- inittime+slide
+    endtime <- endtime+slide
+    
+  }
+  
+  rollsd
+  
+}
+
+
+
+
 
 # This function receives a data frame with eyetracking events (pupil diameter), and it
 # draws basic line plots regarding their evolution over time (using a sliding window)
 # Currently, calculates mean and standard deviation over the defined windows
 # The default window size is 10s (300 samples), with 10 samples window slide
-eyetrackerPlots <- function(pupildata, fixdata, sacdata, window=300, slide=10){
+basicEyetrackerPlots <- function(pupildata, fixdata, sacdata, window=300, slide=10){
   
   # We split each session's data, and put it into a list
   pupildata$Session <- as.factor(pupildata$Session)
@@ -102,3 +290,51 @@ eyetrackerPlots <- function(pupildata, fixdata, sacdata, window=300, slide=10){
   
   
 }
+
+
+# Multiple plot function, from http://www.cookbook-r.com/Graphs/Multiple_graphs_on_one_page_(ggplot2)/
+#
+# ggplot objects can be passed in ..., or to plotlist (as a list of ggplot objects)
+# - cols:   Number of columns in layout
+# - layout: A matrix specifying the layout. If present, 'cols' is ignored.
+#
+# If the layout is something like matrix(c(1,2,3,3), nrow=2, byrow=TRUE),
+# then plot 1 will go in the upper left, 2 will go in the upper right, and
+# 3 will go all the way across the bottom.
+#
+multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
+  require(grid)
+  
+  # Make a list from the ... arguments and plotlist
+  plots <- c(list(...), plotlist)
+  
+  numPlots = length(plots)
+  
+  # If layout is NULL, then use 'cols' to determine layout
+  if (is.null(layout)) {
+    # Make the panel
+    # ncol: Number of columns of plots
+    # nrow: Number of rows needed, calculated from # of cols
+    layout <- matrix(seq(1, cols * ceiling(numPlots/cols)),
+                     ncol = cols, nrow = ceiling(numPlots/cols))
+  }
+  
+  if (numPlots==1) {
+    print(plots[[1]])
+    
+  } else {
+    # Set up the page
+    grid.newpage()
+    pushViewport(viewport(layout = grid.layout(nrow(layout), ncol(layout))))
+    
+    # Make each plot, in the correct location
+    for (i in 1:numPlots) {
+      # Get the i,j matrix positions of the regions that contain this subplot
+      matchidx <- as.data.frame(which(layout == i, arr.ind = TRUE))
+      
+      print(plots[[i]], vp = viewport(layout.pos.row = matchidx$row,
+                                      layout.pos.col = matchidx$col))
+    }
+  }
+}
+

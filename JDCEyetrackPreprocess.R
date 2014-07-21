@@ -9,33 +9,28 @@ JDCEyetrackPreprocess <- function(rootDir="."){
   # We get the pupil diameter from the eyetracker events
   files <- list.files(pattern = "\\-eyetracking-eventexport.txt$")
   
-  totaldata <- FALSE
+  pupildata <- FALSE
   
   for(file in files){
     filedata <- read.csv(file,comment.char="#")
     
-    # we select the meaningful columns (for now, only pupil diameter)
-    filedata <- filedata[c(1,6,9)]
+    # we select the meaningful columns (for now, only pupil diameter, and kind of event)
+    filedata <- filedata[c(1,6,9,30)]
     # TODO: add other measures?
     
     # We extract the session number from the filename, and create a variable for it
     index <- regexpr("Session",file,fixed=T)
     filedata$Session <- substr(file,index+7,index+7)
     
-    if(length(totaldata) == 1) totaldata <- data.frame(filedata) # This is the first file
-    else totaldata <- rbind(totaldata,filedata) # The global data frame exists, just add to it
+    if(length(pupildata) == 1) pupildata <- data.frame(filedata) # This is the first file
+    else pupildata <- rbind(pupildata,filedata) # The global data frame exists, just add to it
     
   }
   
-  # We position all events using the first one as the origin, as it is done for fixations and saccades
-  totaldata$Time <- totaldata$Time - min(totaldata$Time)
-
-  save(totaldata,file="EyetrackerEvents.rda",compress=TRUE)
-
   # We get the fixation data from the fixation details raw file
   files <- list.files(pattern = "\\-fixationDetails.txt$")
   
-  totaldata <- FALSE
+  fixdata <- FALSE
   
   for(file in files){
     filedata <- read.csv(file,comment.char="#")
@@ -48,16 +43,14 @@ JDCEyetrackPreprocess <- function(rootDir="."){
     index <- regexpr("Session",file,fixed=T)
     filedata$Session <- substr(file,index+7,index+7)
     
-    if(length(totaldata) == 1) totaldata <- data.frame(filedata) # This is the first file
-    else totaldata <- rbind(totaldata,filedata) # The global data frame exists, just add to it
+    if(length(fixdata) == 1) fixdata <- data.frame(filedata) # This is the first file
+    else fixdata <- rbind(fixdata,filedata) # The global data frame exists, just add to it
   }
-  
-  save(totaldata,file="EyetrackerFixations.rda",compress=TRUE)
   
   # We get the saccade data from the saccade details file
   files <- list.files(pattern = "\\-saccadeDetails.txt$")
   
-  totaldata <- FALSE
+  sacdata <- FALSE
   
   for(file in files){
     filedata <- read.csv(file,comment.char="#")
@@ -70,11 +63,45 @@ JDCEyetrackPreprocess <- function(rootDir="."){
     index <- regexpr("Session",file,fixed=T)
     filedata$Session <- substr(file,index+7,index+7)
     
-    if(length(totaldata) == 1) totaldata <- data.frame(filedata) # This is the first file
-    else totaldata <- rbind(totaldata,filedata) # The global data frame exists, just add to it
+    if(length(sacdata) == 1) sacdata <- data.frame(filedata) # This is the first file
+    else sacdata <- rbind(sacdata,filedata) # The global data frame exists, just add to it
+  }
+  # We add the saccade speed for each saccade
+  sacdata$Saccade.Speed <- sacdata$Amplitude.... / sacdata$Saccade.Duration..ms.
+  
+  # We split the data per session
+  pupildata$Session <- as.factor(pupildata$Session)
+  pupilsessions <- split(pupildata,pupildata$Session)
+  fixdata$Session <- as.factor(fixdata$Session)
+  fixsessions <- split(fixdata,fixdata$Session)
+  sacdata$Session <- as.factor(sacdata$Session)
+  sacsessions <- split(sacdata,sacdata$Session)
+  
+  # We add time information so that all metrics can be aligned
+  for(i in 1:length(pupilsessions)){#For each session
+    # We calculate the time baseline of the session
+    time0 <- min(pupilsessions[[i]]$Time)
+    pupilsessions[[i]]$Time.ms <- (pupilsessions[[i]]$Time - time0) / 1000
+    
+    fixsessions[[i]]$Time.ms <- (fixsessions[[i]]$Fixation.Start..ms. + (fixsessions[[i]]$Fixation.Duration..ms./2)) #We set the time of fixation in the middle of the fixation
+    fixsessions[[i]]$Time <- time0 + (fixsessions[[i]]$Time.ms)*1000
+    
+    sacsessions[[i]]$Time.ms <- (sacsessions[[i]]$Saccade.Start..ms. + (sacsessions[[i]]$Saccade.Duration..ms./2)) #We set the time of saccade in the middle of the fixation
+    sacsessions[[i]]$Time <- time0 + (sacsessions[[i]]$Time.ms)*1000
+    
+    #TODO: We might want to check the first event of a certain kind, so that we have a more correct baseline (but probably is negligible)
   }
   
-  save(totaldata,file="EyetrackerSaccades.rda",compress=TRUE)
+  # We join the data again in a single frame containing all sessions
+  f <- pupildata$Session
+  pupildata <- unsplit(pupilsessions,f)
+  fixdata <- unsplit(fixsessions,fixdata$Session)
+  sacdata <- unsplit(sacsessions,sacdata$Session)
+  
+  # We save the data to respective files
+  save(pupildata,file="EyetrackerEvents.rda",compress=TRUE)
+  save(fixdata,file="EyetrackerFixations.rda",compress=TRUE)
+  save(sacdata,file="EyetrackerSaccades.rda",compress=TRUE)
   
   
   cat ("Process finished! Check your .rda files")
