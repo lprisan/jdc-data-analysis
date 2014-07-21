@@ -1241,9 +1241,9 @@ getContinuousValue <- function(tags,targetTags,contType){
   # Rectangular
   # First manipulative: tag 1 <- 326, tag 2 <- 327
   # Second manipulative: tag 1 <- 331, tag 2 <- 332
-  presentTag1 <- tags[tags$id %in% c(316,321,326,331),]
-  presentTag2 <- tags[tags$id %in% c(317,322,327,332),]
-  presentTag34 <- tags[tags$id %in% c(318,319,323,324,328,329,333,334),]
+  presentTag1 <- presentTags[presentTags$id %in% c(316,321,326,331),]
+  presentTag2 <- presentTags[presentTags$id %in% c(317,322,327,332),]
+  presentTag34 <- presentTags[presentTags$id %in% c(318,319,323,324,328,329,333,334),]
   
   
   # if the needed tags of this tangible to calculate the value are not present, return NA
