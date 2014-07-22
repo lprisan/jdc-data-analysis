@@ -875,7 +875,7 @@ mergeSplitLogFiles <- function(directory, startTime, endTime, label){
       newData$Value.R2[[i]] <- getContinuousValue(tags,331:335,"R") # Continuous Rectangular 2 set
       
       
-      # We get the quadrant of each tag group, returned as characters "0" "Q1" "Q2" "Q3" "Q4" (to be later converted into factors)
+      #We get the quadrant of each tag group, returned as characters "0" "Q1" "Q2" "Q3" "Q4" (to be later converted into factors)
       newData$C1[[i]] <- getQuadrantTagGroup(tags,displayWidth,displayHeight,316:320) # Continuous Circular 1 set
       newData$C2[[i]] <- getQuadrantTagGroup(tags,displayWidth,displayHeight,321:325) # Continuous Circular 2 set
       newData$R1[[i]] <- getQuadrantTagGroup(tags,displayWidth,displayHeight,326:330) # Continuous Rectangular 1 set
@@ -947,7 +947,7 @@ mergeSplitLogFiles <- function(directory, startTime, endTime, label){
       newData$Carte9[[i]] <- getQuadrantTagGroup(tags,displayWidth,displayHeight,417) # Carte 9 card
       newData$Carte10[[i]] <- getQuadrantTagGroup(tags,displayWidth,displayHeight,418) # Carte 10 card
       
-      # TODO: Optionally, we can add some time measurement represented by this value? but then what do we do with interruptions/gaps?
+      #TODO: Optionally, we can add some time measurement represented by this value? but then what do we do with interruptions/gaps?
     
     }
 
@@ -1245,7 +1245,9 @@ getContinuousValue <- function(tags,targetTags,contType){
   presentTag2 <- presentTags[presentTags$id %in% c(317,322,327,332),]
   presentTag34 <- presentTags[presentTags$id %in% c(318,319,323,324,328,329,333,334),]
   
-  
+  if(length(presentTags$id)>3 && contType=="R"){
+    value2 <- 3
+  }
   # if the needed tags of this tangible to calculate the value are not present, return NA
   if(length(presentTags$id)==0 || length(presentCenter$id)==0 || length(presentTag1$id)==0 || length(presentTag2$id)==0 || (contType=="C" && length(presentTag34$id)==0)) return(NA)
   else{ #the tags are present, let's calculate the value
@@ -1269,9 +1271,9 @@ getContinuousValue <- function(tags,targetTags,contType){
           
           #We calculate the distance between the two tags
           totalDistance <- getDistance (originPoint, startPoint)
-          projectedDistance <- getDistance (originPoint, endPoint)*cos(angle)
+          projectedDistance <- projectedDistance*cos(angle)
           
-          value <- projectedDistance / totalDistance
+          value <- (projectedDistance / totalDistance)
 
       }
         
@@ -1279,28 +1281,52 @@ getContinuousValue <- function(tags,targetTags,contType){
         
           value <- 0 # Do whatever with the here to calculate the circular value
           
-          x1 <- mean(presentTag1$corners[[1]][[1]] , presentTag1$corners[[1]][[3]]) #Center (x) of the first tag 
-          y1 <- mean(presentTag1$corners[[1]][[4]] , presentTag1$corners[[1]][[6]]) #Center (y) of the first tag
+        
+          x1 <- sum(presentTag1$corners[[1]][[1]],presentTag1$corners[[1]][[3]],presentTag1$corners[[1]][[5]],presentTag1$corners[[1]][[7]])/4 #Center (x) of the first tag
+          y1 <- sum(presentTag1$corners[[1]][[2]],presentTag1$corners[[1]][[4]],presentTag1$corners[[1]][[6]],presentTag1$corners[[1]][[8]])/4 #Center (y) of the first tag
           
-          x2 <- mean(presentTag2$corners[[1]][[1]] , presentTag2$corners[[1]][[3]]) #Center (x) of the second tag 
-          y2 <- mean(presentTag2$corners[[1]][[4]] , presentTag2$corners[[1]][[6]]) #Center (y) of the second tag
+          x2 <- sum(presentTag2$corners[[1]][[1]],presentTag2$corners[[1]][[3]],presentTag2$corners[[1]][[5]],presentTag2$corners[[1]][[7]])/4 #Center (x) of the second tag 
+          y2 <- sum(presentTag2$corners[[1]][[2]],presentTag2$corners[[1]][[4]],presentTag2$corners[[1]][[6]],presentTag2$corners[[1]][[8]])/4 #Center (y) of the second tag
           
-          x3 <- mean(presentTag34$corners[[1]][[1]] , presentTag34$corners[[1]][[3]]) #Center (x) of the third tag 
-          y3 <- mean(presentTag34$corners[[1]][[4]] , presentTag34$corners[[1]][[6]]) #Center (y) of the third tag
+          x3 <- sum(presentTag34$corners[[1]][[1]],presentTag34$corners[[1]][[3]],presentTag34$corners[[1]][[5]],presentTag34$corners[[1]][[7]])/4 #Center (x) of the second tag 
+          y3 <- sum(presentTag34$corners[[1]][[2]],presentTag34$corners[[1]][[4]],presentTag34$corners[[1]][[6]],presentTag34$corners[[1]][[8]])/4 #Center (y) of the second tag
           
           #This is the center of the marker circular_origin (is a point2d)
-          originPoint <- c(x= mean(x1,x2), y= mean(y1,y3))
+          
+          if(length(presentTag34$id) == 2){ #If we have the two corners identified, then we calculate the center of the 4th tag
+            x4 <- sum(presentTag34$corners[[2]][[1]],presentTag34$corners[[2]][[3]],presentTag34$corners[[2]][[5]],presentTag34$corners[[2]][[7]])/4 #Center (x) of the second tag 
+            y4 <- sum(presentTag34$corners[[2]][[2]],presentTag34$corners[[2]][[4]],presentTag34$corners[[2]][[6]],presentTag34$corners[[2]][[8]])/4 #Center (y) of the second tag
+            
+            originPoint <- c(x= sum(x1,x2,x3,x4)/4, y= sum(y1,y2,y3,y4)/4)
+            
+          }else{ #We have to calculate considering the three points
+            
+            angleBetweenTags <- getVertexAngle(c(x = x2 , y = y2), c(x = x1 , y = y1), c(x = x3, y = y3)) 
+            
+            if(angleBetweenTags < pi/2){#If the bottom tag is the 3th one
+              originPoint.x <- sum(x1,x3)/2
+            } else { #The bottom tag is the 4th one
+              originPoint.x <- sum(x2,x3)/2
+            }
+            originPoint.y <- sum(y1,y3)/2
+            
+            originPoint <- c(x=originPoint.x , y = originPoint.y) #Center of the manipulative.
+          }
+           
           
           #This is the center of the marker circunf_control (is a point2d)  
-          endPoint <- c(x = mean(presentCenter$corners[[1]][[1]],presentCenter$corners[[1]][[3]]),y = mean(presentCenter$corners[[1]][[4]],presentCenter$corners[[1]][[6]]))
+          endPoint.x <- sum(presentCenter$corners[[1]][[1]],presentCenter$corners[[1]][[3]],presentCenter$corners[[1]][[5]],presentCenter$corners[[1]][[7]])/4
+          endPoint.y <- sum(presentCenter$corners[[1]][[2]],presentCenter$corners[[1]][[4]],presentCenter$corners[[1]][[6]],presentCenter$corners[[1]][[8]])/4
+          
+          #endPoint <- c(x = mean(presentCenter$corners[[1]][[1]],presentCenter$corners[[1]][[3]]),y = mean(presentCenter$corners[[1]][[4]],presentCenter$corners[[1]][[6]]))
+          endPoint <- c(x = endPoint.x, y = endPoint.y)
           
           #Centroid of the tag [0] and [1] of the circular_origin marker (is a point2d)
-          startPoint <- c(x = mean(x1,x2) , y = mean(y1,y2)) 
-            
+          startPoint <- c(x = sum(x1,x2)/2 , y = sum(y1,y2)/2) 
             
           angle <- getVertexAngle(startPoint, originPoint, endPoint) #Check the parameters
           
-          value <- 1 - (angle/(2*pi))
+          value <- (angle/(2*pi))
 
       }else return(NA)
   }
@@ -1431,7 +1457,7 @@ getVertexAngle <- function(startPoint, originPoint, endPoint){ ##Put the input h
 getDistance <- function(point1, point2){
   
   x = point2[[1]] - point1[[1]]
-  y = point2[[2]] - point2[[2]]
+  y = point2[[2]] - point1[[2]]
   
   return (sqrt(x * x + y * y))
 }

@@ -2,6 +2,7 @@
 require("ggplot2")
 require("reshape2")
 require("plotrix")
+require("cluster")
 #require("Gmisc")
 #require("zoo")
 
@@ -38,9 +39,9 @@ JDCAnalysisHCI <- function(rootDir="."){
   #manipulativeUsagePlots(act4UsageSummary)
   
   # Collaboration (ownership, awareness)
-  #goPositionPlots(logdir)
+  goPositionPlots(logdir)
   #fractionValuePlots(logdir)
-  goRotationPlots(logdir)
+  #goRotationPlots(logdir)
   
   
 }
@@ -215,28 +216,110 @@ goPositionPlots <- function(logdir){
     name <- paste(groupName,".GoPosition.png",sep="")
     
     #Create the .png file of the position
-    png(name,width=1280,height=1024)
-    plot(logGoPosition$Position.Go.y ~ logGoPosition$Position.Go.x, cex = 4,pch=1,xlim=c(0, 1280),ylim = c(768,0), col=rgb(red=0.2, green=0.2, blue=1.0, alpha=0.08), axes=TRUE,xlab = "X [px]", ylab = "Y [px]", main = paste(groupName," Go card position",sep=""))
+    #png(name,width=1280,height=1024)
+    #plot(logGoPosition$Position.Go.y ~ logGoPosition$Position.Go.x, cex = 4,pch=1,xlim=c(0, 1280),ylim = c(768,0), col=rgb(red=0.2, green=0.2, blue=1.0, alpha=0.08), axes=TRUE,xlab = "X [px]", ylab = "Y [px]", main = paste(groupName," Go card position",sep=""))
     
     #We draw the circles in each corner
-    draw.circle(0,0,384)
-    draw.circle(0,768,384)
-    draw.circle(1280,0,384)
-    draw.circle(1280,768,384)
+    #draw.circle(0,0,384)
+    #draw.circle(0,768,384)
+    #draw.circle(1280,0,384)
+    #draw.circle(1280,768,384)
     
     #We draw the map area, so we can see where was the Go card
-    rect(384,640,896,128, border = "blue")
-    dev.off()
+    #rect(384,640,896,128, border = "blue")
+    #dev.off()
     
     name <- paste(groupName, ".GoPosition.Over.Time.png",sep="")
     
     #Create the .png file of the position over time
+    #png(name,width=1280,height=1024)
+    #par(mfrow=c(2,1))
+    #minTime <- min(logGoPosition$Timestamp)
+    #maxTime <- max(logGoPosition$Timestamp)
+    #plot(logGoPosition$Position.Go.x ~ logGoPosition$Timestamp,type='l', xlim = c(minTime,maxTime), ylim = c(0,1280), col='blue',axes = TRUE, xlab = "Time [ms]", ylab = "X position [px]", main = paste(groupName," Go card X position vs Time", sep = ""))
+    #plot(logGoPosition$Position.Go.y ~ logGoPosition$Timestamp,type='l', xlim = c(minTime,maxTime), ylim = c(768,0), col='blue',axes = TRUE, xlab = "Time [ms]", ylab = "Y position [px]", main = paste(groupName," Go card Y position vs Time", sep = ""))
+    #dev.off()
+    
+    ##### Resume plot with the rotation
+    #name <- paste(groupName, ".GoPosition.Resume.png",sep="")
+    #png(name,width=1280,height=1024)
+    #plot(logGoPosition$Position.Go.y ~ logGoPosition$Position.Go.x, pch=21,cex = 4,xlim=c(0, 1280),ylim = c(768,0), col=rgb(red=1.0, green=1.0, blue=0.3, alpha=0.08),bg =rgb(red=1.0, green=1.0, blue=0.3, alpha=0.08) , axes=TRUE,xlab = "X [px]", ylab = "Y [px]", main = paste(groupName," Go card position",sep=""))
+    
+    #We draw the circles in each corner
+    #draw.circle(0,0,384,col = rgb(red=0.0,green=0.0,blue=0.0,alpha = 0.01))
+    #draw.circle(0,768,384,col = rgb(red=0.0,green=0.0,blue=0.0,alpha = 0.01))
+    #draw.circle(1280,0,384,col = rgb(red=0.0,green=0.0,blue=0.0,alpha = 0.01))
+    #draw.circle(1280,768,384,col = rgb(red=0.0,green=0.0,blue=0.0,alpha = 0.01))
+    
+    #We draw the map area, so we can see where was the Go card
+    #rect(384,640,896,128, border = "black")
+    
+    
+    #We draw the Arrows
+    #logGoPosition <- getGoPositiondata(data)
+    #length <- length(logGoPosition$Rotation.Go)
+    #side = numeric(length)
+    #mean = numeric(length)
+    
+    #logGoRotation <- data.frame(logGoPosition$Rotation.Go,logGoPosition$Timestamp,side,mean)
+    
+    #side.1 <- sum(logGoPosition$Rotation.Go < pi/8 | logGoPosition$Rotation.Go > 15*pi/8)
+    #side.2 <- sum(logGoPosition$Rotation.Go < 3*pi/8 & logGoPosition$Rotation.Go > pi/8)
+    #side.3 <- sum(logGoPosition$Rotation.Go < 5*pi/8 & logGoPosition$Rotation.Go > 3*pi/8)
+    #side.4 <- sum(logGoPosition$Rotation.Go < 7*pi/8 & logGoPosition$Rotation.Go > 5*pi/8)
+    #side.5 <- sum(logGoPosition$Rotation.Go < 9*pi/8 & logGoPosition$Rotation.Go > 7*pi/8)
+    #side.6 <- sum(logGoPosition$Rotation.Go < 11*pi/8 & logGoPosition$Rotation.Go > 9*pi/8)
+    #side.7 <- sum(logGoPosition$Rotation.Go < 13*pi/8 & logGoPosition$Rotation.Go > 11*pi/8)
+    #side.8 <- sum(logGoPosition$Rotation.Go < 15*pi/8 & logGoPosition$Rotation.Go > 13*pi/8)
+    #total <- side.1+side.2+side.3+side.4+side.5+side.6+side.7+side.8
+    #side.1.mean <- side.1/total
+    #side.2.mean <- side.2/total
+    #side.3.mean <- side.3/total
+    #side.4.mean <- side.4/total
+    #side.5.mean <- side.5/total
+    #side.6.mean <- side.6/total
+    #side.7.mean <- side.7/total
+    #side.8.mean <- side.8/total
+    
+    #arrows(640, 384, 640, 600 ,length = 0.5, lwd=20*side.1.mean, code = 2, col = rgb(red=0.3,green=0.0,blue=1.0,alpha=0.8), lty = NULL, xpd = FALSE) #Side 1
+    #arrows(640, 384, 856, 600 ,length = 0.5, lwd=20*side.2.mean, code = 2, col = rgb(red=0.3,green=0.0,blue=1.0,alpha=0.8), lty = NULL, xpd = FALSE) #Side 2
+    #arrows(640, 384, 856, 384 ,length = 0.5, lwd=20*side.3.mean, code = 2, col = rgb(red=0.3,green=0.0,blue=1.0,alpha=0.8), lty = NULL, xpd = FALSE) #Side 3
+    #arrows(640, 384, 856, 168 ,length = 0.5, lwd=20*side.4.mean, code = 2, col = rgb(red=0.3,green=0.0,blue=1.0,alpha=0.8), lty = NULL, xpd = FALSE) #Side 4
+    #arrows(640, 384, 640, 168 ,length = 0.5, lwd=20*side.5.mean, code = 2, col = rgb(red=0.3,green=0.0,blue=1.0,alpha=0.8), lty = NULL, xpd = FALSE) #Side 5
+    #arrows(640, 384, 424, 168 ,length = 0.5, lwd=20*side.6.mean, code = 2, col = rgb(red=0.3,green=0.0,blue=1.0,alpha=0.8), lty = NULL, xpd = FALSE) #Side 6
+    #arrows(640, 384, 424, 384 ,length = 0.5, lwd=20*side.7.mean, code = 2, col = rgb(red=0.3,green=0.0,blue=1.0,alpha=0.8), lty = NULL, xpd = FALSE) #Side 7
+    #arrows(640, 384, 424, 600 ,length = 0.5, lwd=20*side.8.mean, code = 2, col = rgb(red=0.3,green=0.0,blue=1.0,alpha=0.8), lty = NULL, xpd = FALSE) #Side 8
+    #dev.off()
+    
+    ##### Resume plot with the density of the points #######
+    name <- paste(groupName, ".GoPosition.Density.Resume.png",sep="")
     png(name,width=1280,height=1024)
-    par(mfrow=c(2,1))
-    minTime <- min(logGoPosition$Timestamp)
-    maxTime <- max(logGoPosition$Timestamp)
-    plot(logGoPosition$Position.Go.x ~ logGoPosition$Timestamp,type='l', xlim = c(minTime,maxTime), ylim = c(0,1280), col='blue',axes = TRUE, xlab = "Time [ms]", ylab = "X position [px]", main = paste(groupName," Go card X position vs Time", sep = ""))
-    plot(logGoPosition$Position.Go.x ~ logGoPosition$Timestamp,type='l', xlim = c(minTime,maxTime), ylim = c(768,0), col='blue',axes = TRUE, xlab = "Time [ms]", ylab = "Y position [px]", main = paste(groupName," Go card Y position vs Time", sep = ""))
+    plot(logGoPosition$Position.Go.y ~ logGoPosition$Position.Go.x, pch=21,cex = 4,xlim=c(0, 1280),ylim = c(768,0), col=rgb(red=1.0, green=1.0, blue=0.3, alpha=0.08),bg =rgb(red=1.0, green=1.0, blue=0.3, alpha=0.08) , axes=TRUE,xlab = "X [px]", ylab = "Y [px]", main = paste(groupName," Go card position",sep=""))
+    
+    #We draw the circles in each corner
+    draw.circle(0,0,384,col = rgb(red=0.0,green=0.0,blue=0.0,alpha = 0.01))
+    draw.circle(0,768,384,col = rgb(red=0.0,green=0.0,blue=0.0,alpha = 0.01))
+    draw.circle(1280,0,384,col = rgb(red=0.0,green=0.0,blue=0.0,alpha = 0.01))
+    draw.circle(1280,768,384,col = rgb(red=0.0,green=0.0,blue=0.0,alpha = 0.01))
+    
+    #We draw the map area, so we can see where was the Go card
+    rect(384,640,896,128, border = "black")
+    
+    
+    #We draw the lines that takes into account the SD 
+    logGoPosition <- getGoPositiondata(data)
+    length <- length(logGoPosition$Rotation.Go)
+    
+    
+    mean.x <- mean(logGoPosition$Position.Go.x)
+    cat(str(mean.x))
+    mean.y <- mean(logGoPosition$Position.Go.y)
+    
+    sd.x <- sd(logGoPosition$Position.Go.x)
+    sd.y <- sd(logGoPosition$Position.Go.y)
+    
+    draw.ellipse(x=mean.x,y=mean.y,a=sd.x,b=sd.y, border = "blue")
+    
     dev.off()
     
   }
@@ -251,30 +334,86 @@ goRotationPlots <- function(logdir){
     
     #We get the data of the position
     logGoPosition <- getGoPositiondata(data)
-   
-    logGoRotation <- data.frame(logGoPosition$Rotation.Go,logGoPosition$Timestamp)
+    length <- length(logGoPosition$Rotation.Go)
+    side = numeric(length)
+    mean = numeric(length)
+    
+    logGoRotation <- data.frame(logGoPosition$Rotation.Go,logGoPosition$Timestamp,side,mean)
 
+    side.1 <- sum(logGoPosition$Rotation.Go < pi/8 | logGoPosition$Rotation.Go > 15*pi/8)
+    side.2 <- sum(logGoPosition$Rotation.Go < 3*pi/8 & logGoPosition$Rotation.Go > pi/8)
+    side.3 <- sum(logGoPosition$Rotation.Go < 5*pi/8 & logGoPosition$Rotation.Go > 3*pi/8)
+    side.4 <- sum(logGoPosition$Rotation.Go < 7*pi/8 & logGoPosition$Rotation.Go > 5*pi/8)
+    side.5 <- sum(logGoPosition$Rotation.Go < 9*pi/8 & logGoPosition$Rotation.Go > 7*pi/8)
+    side.6 <- sum(logGoPosition$Rotation.Go < 11*pi/8 & logGoPosition$Rotation.Go > 9*pi/8)
+    side.7 <- sum(logGoPosition$Rotation.Go < 13*pi/8 & logGoPosition$Rotation.Go > 11*pi/8)
+    side.8 <- sum(logGoPosition$Rotation.Go < 15*pi/8 & logGoPosition$Rotation.Go > 13*pi/8)
+    total <- side.1+side.2+side.3+side.4+side.5+side.6+side.7+side.8
+    
+    
+    for(i in 1:length){
+      if(logGoPosition$Rotation.Go[[i]] < pi/8 | logGoPosition$Rotation.Go[[i]] > 15*pi/8){
+        side[[i]] <- 1
+        mean[[i]] <- side.1/total 
+      } else  if(logGoPosition$Rotation.Go[[i]] < 3*pi/8 & logGoPosition$Rotation.Go[[i]] > pi/8){
+        side[[i]] <- 2
+        mean[[i]] <- side.2/total
+      } else if(logGoPosition$Rotation.Go[[i]] < 5*pi/8 & logGoPosition$Rotation.Go[[i]] > 3*pi/8){
+        side[[i]] <- 3
+        mean[[i]] <- side.3/total
+      } else if(logGoPosition$Rotation.Go[[i]] < 7*pi/8 & logGoPosition$Rotation.Go[[i]] > 5*pi/8){
+        side[[i]] <- 4
+        mean[[i]] <- side.4/total
+      } else if(logGoPosition$Rotation.Go[[i]] < 9*pi/8 & logGoPosition$Rotation.Go[[i]] > 7*pi/8){
+        side[[i]] <- 5
+        mean[[i]] <- side.5/total
+      } else if(logGoPosition$Rotation.Go[[i]] < 11*pi/8 & logGoPosition$Rotation.Go[[i]] > 9*pi/8){
+        side[[i]] <- 6
+        mean[[i]] <- side.6/total
+      } else if(logGoPosition$Rotation.Go[[i]] < 13*pi/8 & logGoPosition$Rotation.Go[[i]] > 11*pi/8){
+        side[[i]] <- 7
+        mean[[i]] <- side.7/total
+      } else {
+        side[[i]] <- 8 
+        mean[[i]] <- side.8/total
+      }
+    }
+   
     #Get the name of the .png file
     groupName <- basename(file)
     groupName <-  substr(groupName, 1, nchar(groupName)-4)
-    name <- paste(groupName,".Go.Rotation.Over.Time.png",sep="")
+    #name <- paste(groupName,".Go.Rotation.Over.Time.png",sep="")
     
     
     #Create the .png file of the position
-    png(name,width=1280,height=1024)
-    plot(logGoRotation$logGoPosition.Rotation.Go ~ logGoRotation$logGoPosition.Timestamp, pch = 1, cex = 4,col=rgb(red=0.0, green=0.8, blue=0.0, alpha=0.08),xlim=c(min(logGoRotation$logGoPosition.Timestamp), max(logGoRotation$logGoPosition.Timestamp)),ylim = c(0,2*pi), axes=TRUE,xlab = "Time [ms]", ylab = "Rotation [rad]", main = paste(groupName," Go card rotation vs Time",sep=""))
-    abline(a = 0, b = 0,col = 'blue')
-    abline(a = pi/4, b = 0,col = 'blue')
-    abline(a = pi/2, b = 0,col = 'blue')
-    abline(a = 3*pi/4, b = 0,col = 'blue')
-    abline(a = pi, b = 0,col = 'blue')
-    abline(a = 5*pi/4, b = 0,col = 'blue')
-    abline(a = 3*pi/2, b = 0,col = 'blue')
-    abline(a = 7*pi/4, b = 0,col = 'blue')
-    abline(a = 2*pi, b = 0,col = 'blue')
+    #png(name,width=1280,height=1024)
+    #plot(logGoRotation$logGoPosition.Rotation.Go ~ logGoRotation$logGoPosition.Timestamp, pch = 1, cex = 4,col=rgb(red=0.0, green=0.8, blue=0.0, alpha=0.08),xlim=c(min(logGoRotation$logGoPosition.Timestamp), max(logGoRotation$logGoPosition.Timestamp)),ylim = c(0,2*pi), axes=TRUE,xlab = "Time [ms]", ylab = "Rotation [rad]", main = paste(groupName," Go card rotation vs Time",sep=""))
+    #abline(a = 0, b = 0,col = 'blue')
+    #abline(a = pi/8, b = 0,col = 'blue')
+    #abline(a = 3*pi/8, b = 0,col = 'blue')
+    #abline(a = 5*pi/8, b = 0,col = 'blue')
+    #abline(a = 7*pi/8, b = 0,col = 'blue')
+    #abline(a = 9*pi/8, b = 0,col = 'blue')
+    #abline(a = 11*pi/8, b = 0,col = 'blue')
+    #abline(a = 13*pi/8, b = 0,col = 'blue')
+    #abline(a = 15*pi/8, b = 0,col = 'blue')
 
-    dev.off()
+    #dev.off()
     
+    #name <- paste(groupName,".Go.Side.Over.Time.png",sep="")
+    #png(name,width=1280,height=1024)
+    #plot(side ~ logGoRotation$logGoPosition.Timestamp, xlim=c(min(logGoRotation$logGoPosition.Timestamp), max(logGoRotation$logGoPosition.Timestamp)), axes=TRUE,xlab = "Time [ms]", ylab = "Rotation [rad]", main = paste(groupName," Go card side vs Time",sep=""))
+    #dev.off()
+    
+    #name <- paste(groupName,".Go.Side.Histogram.png",sep="")
+    #png(name,width=1280,height=1024)
+    #hist(side, col="white", xlab="Side", ylab="Count", main=paste(groupName, " Side prevalence (rotation) of Go Card",sep=""))
+    #dev.off()
+    
+    name <- paste(groupName,".Go.Side.Mean.png",sep="")
+    png(name,width=1280,height=1024)
+    plot(mean ~ side, pch = 1, cex = 4, col = "blue", xlim = c(1,8),  ylim = c(0,1), xlab = "Side" , ylab = "Mean", main = paste(groupName," Side Mean ",sep=""))
+    dev.off()
     
   }
 }
