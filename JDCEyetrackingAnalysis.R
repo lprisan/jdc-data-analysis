@@ -104,6 +104,9 @@ jointEyetrackerPlots <- function(pupildata, fixdata, sacdata, window=30, slide=5
     multiplot(p1, p2, p3, p4, p5, cols=1)
     dev.off()
    
+    #We do run length compression onto the load data, to detect interesting episodes
+    #runs <- rle(totaldata$Load)
+    
     interesting <- totaldata[totaldata$Load>=max(totaldata$Load),"time"]
     
     dataToLook <- as.data.frame(interesting)
@@ -113,6 +116,18 @@ jointEyetrackerPlots <- function(pupildata, fixdata, sacdata, window=30, slide=5
     dataToLook$Load <- max(totaldata$Load)
     
     write.csv(dataToLook, file=paste("Loaded.Times.Session.",pupilsessions[[i]]$Session[[1]],".csv",sep=""))
+
+    interesting <- totaldata[totaldata$Load>=min(totaldata$Load),"time"]
+    
+    dataToLook <- as.data.frame(interesting)
+    names(dataToLook) <- "Time.ms"
+    dataToLook$Time.min <- msToMinSec(interesting)
+    dataToLook$Session <- pupilsessions[[i]]$Session[[1]]
+    dataToLook$Load <- max(totaldata$Load)
+    
+    write.csv(dataToLook, file=paste("Unloaded.Times.Session.",pupilsessions[[i]]$Session[[1]],".csv",sep=""))
+    
+    
     
   }
   
