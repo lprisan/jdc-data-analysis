@@ -117,13 +117,13 @@ jointEyetrackerPlots <- function(pupildata, fixdata, sacdata, window=30, slide=5
     
     write.csv(dataToLook, file=paste("Loaded.Times.Session.",pupilsessions[[i]]$Session[[1]],".csv",sep=""))
 
-    interesting <- totaldata[totaldata$Load>=min(totaldata$Load),"time"]
+    interesting <- totaldata[totaldata$Load==min(totaldata$Load),"time"]
     
     dataToLook <- as.data.frame(interesting)
     names(dataToLook) <- "Time.ms"
     dataToLook$Time.min <- msToMinSec(interesting)
     dataToLook$Session <- pupilsessions[[i]]$Session[[1]]
-    dataToLook$Load <- max(totaldata$Load)
+    dataToLook$Load <- min(totaldata$Load)
     
     write.csv(dataToLook, file=paste("Unloaded.Times.Session.",pupilsessions[[i]]$Session[[1]],".csv",sep=""))
     
