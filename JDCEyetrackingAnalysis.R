@@ -15,7 +15,7 @@ JDCEyetrackingAnalysis <- function(rootDir="."){
   # We do some basic plotting of eyetracking parameters
   basicEyetrackerPlots(pupildata, fixdata, sacdata)
   
-  jointEyetrackerPlots(pupildata, fixdata, sacdata)
+  jointEyetrackerPlots(pupildata, fixdata, sacdata, window=10, slide=5)
   
 }
 
@@ -95,13 +95,16 @@ jointEyetrackerPlots <- function(pupildata, fixdata, sacdata, window=30, slide=5
     totaldata$Above.SD <- as.numeric(totaldata$value.SD > sdsessionavg)
     totaldata$Above.Fix <- as.numeric(totaldata$value.Fix > longsessionavg)
     totaldata$Above.Sac <- as.numeric(totaldata$value.Sac > sacsessionavg)
-    totaldata$Load <- totaldata$Above.Mean + totaldata$Above.SD + totaldata$Above.Fix + totaldata$Above.Sac
+    #totaldata$Load <- totaldata$Above.Mean + totaldata$Above.SD + totaldata$Above.Fix + totaldata$Above.Sac
+    # By now, we leav out the mean PD, as it seems to be unreliable
+    totaldata$Load <- totaldata$Above.SD + totaldata$Above.Fix + totaldata$Above.Sac
     
     p5 <- ggplot(totaldata, aes(x=time, y=Load)) + 
       ggtitle(paste("Estimation of cognitive overload over ",window,"s",sep="")) + 
       geom_line() #+ stat_smooth(method="loess",span=0.1)
     
-    multiplot(p1, p2, p3, p4, p5, cols=1)
+    #multiplot(p1, p2, p3, p4, p5, cols=1)
+    multiplot(p2, p3, p4, p5, cols=1)
     dev.off()
    
     #We do run length compression onto the load data, to detect interesting episodes
@@ -115,7 +118,7 @@ jointEyetrackerPlots <- function(pupildata, fixdata, sacdata, window=30, slide=5
     dataToLook$Session <- pupilsessions[[i]]$Session[[1]]
     dataToLook$Load <- max(totaldata$Load)
     
-    write.csv(dataToLook, file=paste("Loaded.Times.Session.",pupilsessions[[i]]$Session[[1]],".csv",sep=""))
+    write.csv(dataToLook, file=paste("Loaded.Times.Session.",pupilsessions[[i]]$Session[[1]],".window",window,"s.slide",slide,"s.",meanormedian,".csv",sep=""))
 
     interesting <- totaldata[totaldata$Load==min(totaldata$Load),"time"]
     
@@ -125,7 +128,7 @@ jointEyetrackerPlots <- function(pupildata, fixdata, sacdata, window=30, slide=5
     dataToLook$Session <- pupilsessions[[i]]$Session[[1]]
     dataToLook$Load <- min(totaldata$Load)
     
-    write.csv(dataToLook, file=paste("Unloaded.Times.Session.",pupilsessions[[i]]$Session[[1]],".csv",sep=""))
+    write.csv(dataToLook, file=paste("Unloaded.Times.Session.",pupilsessions[[i]]$Session[[1]],".window",window,"s.slide",slide,"s.",meanormedian,".csv",sep=""))
     
     
     
