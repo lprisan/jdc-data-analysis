@@ -1,0 +1,271 @@
+,Time.ms,Time.min,Session,Load,Short description,Activity,Social,Focus,Changing visual field a lot
+1,10000,0m10s,2,0,"Looking down, putting on the recorder",NA,NA,NA,F
+2,285000,4m45s,2,0,Explaining the game to a group,EXP,G,TAB,F
+3,290000,4m50s,2,0,Explaining the game to a group,EXP,G,TAB,F
+4,295000,4m55s,2,0,Explaining the game to a group,EXP,G,TAB,F
+5,320000,5m20s,2,0,Explaining the game to a group,EXP,G,TAB,F
+6,325000,5m25s,2,0,Explaining the game to a group,EXP,G,TAB,F
+7,345000,5m45s,2,0,Explaining the game to a group,EXP,G,TAB,F
+8,350000,5m50s,2,0,Explaining the game to a group,EXP,G,TAB,F
+9,355000,5m55s,2,0,Explaining the game to a group,EXP,G,TAB,F
+10,360000,6m0s,2,0,Explaining the game to a group,EXP,G,TAB,F
+11,420000,7m0s,2,0,Explaining the game to a group,EXP,G,TAB,F
+12,425000,7m5s,2,0,Explaining the game to a group,EXP,G,TAB,F
+13,440000,7m20s,2,0,Explaining the game to a group,EXP,G,TAB,F
+14,445000,7m25s,2,0,Explaining the game to a group,EXP,G,TAB,F
+15,485000,8m5s,2,0,"Looking as one group plays, they make an error, I explain a bit more",REP,G,TAB,F
+16,550000,9m10s,2,0,"Small explanation as to why it had moved in a certain direction, due to occlusion",REP,G,TAB,F
+17,575000,9m35s,2,0,"I give a new map to a group, and start explaining this new phase",TDT,G,TAB,F
+18,580000,9m40s,2,0,"I give a new map to a group, and start explaining this new phase",EXP,G,TAB,F
+19,610000,10m10s,2,0,"I look at what a group is doing, put a new map on the table and explain a bit this new phase",MON,G,TAB,F
+20,615000,10m15s,2,0,"I look at what a group is doing, put a new map on the table and explain a bit this new phase",TDT,G,TAB,F
+21,620000,10m20s,2,0,"I look at what a group is doing, put a new map on the table and explain a bit this new phase",EXP,G,TAB,F
+22,625000,10m25s,2,0,"I look at what a group is doing, put a new map on the table and explain a bit this new phase",EXP,G,TAB,F
+23,690000,11m30s,2,0,Looking at how one of the groups is playing. Do a small clarification about the colors and occlusions. Continue looking (the gap in this run seems to be due to me looking away to monitor the class for one sec),MON,G,TAB,F
+24,695000,11m35s,2,0,Looking at how one of the groups is playing. Do a small clarification about the colors and occlusions. Continue looking (the gap in this run seems to be due to me looking away to monitor the class for one sec),MON,G,TAB,F
+25,7.00E+05,11m40s,2,0,Looking at how one of the groups is playing. Do a small clarification about the colors and occlusions. Continue looking (the gap in this run seems to be due to me looking away to monitor the class for one sec),REP,G,TAB,F
+26,705000,11m45s,2,0,Looking at how one of the groups is playing. Do a small clarification about the colors and occlusions. Continue looking (the gap in this run seems to be due to me looking away to monitor the class for one sec),MON,G,TAB,F
+27,710000,11m50s,2,0,Looking at how one of the groups is playing. Do a small clarification about the colors and occlusions. Continue looking (the gap in this run seems to be due to me looking away to monitor the class for one sec),MON,G,TAB,F
+28,720000,12m0s,2,0,Looking at how one of the groups is playing. Do a small clarification about the colors and occlusions. Continue looking (the gap in this run seems to be due to me looking away to monitor the class for one sec),MON,G,TAB,F
+29,725000,12m5s,2,0,Looking at how one of the groups is playing. Do a small clarification about the colors and occlusions. Continue looking (the gap in this run seems to be due to me looking away to monitor the class for one sec),REP,G,TAB,F
+30,755000,12m35s,2,0,"Go into one of the groups, and ask how are they doing. Listen to their explanations",REP,G,TAB,T
+31,760000,12m40s,2,0,"Go into one of the groups, and ask how are they doing. Listen to their explanations",REP,G,TAB,F
+32,765000,12m45s,2,0,"Go into one of the groups, and ask how are they doing. Listen to their explanations",REP,G,TAB,F
+33,790000,13m10s,2,0,"Go into one of the groups, see how they do, and explain why the bug did not move as they expected",MON,G,TAB,F
+34,795000,13m15s,2,0,"Go into one of the groups, see how they do, and explain why the bug did not move as they expected",REP,G,TAB,F
+35,820000,13m40s,2,0,"Looking into one of the groups, the bug is not moving unexpectedly, apparently one of the tags does not work",REP,G,TAB,F
+36,840000,14m0s,2,0,"Looking into one of the groups, the bug is not moving unexpectedly, apparently one of the tags does not work",REP,G,TAB,F
+37,845000,14m5s,2,0,"Looking into one of the groups, the bug is not moving unexpectedly, apparently one of the tags does not work",REP,G,TAB,F
+38,890000,14m50s,2,0,"Looking at one of the groups playing. When the bug moves incorrectly, I do a bit of explanation. I continue observing",MON,G,TAB,F
+39,895000,14m55s,2,0,"Looking at one of the groups playing. When the bug moves incorrectly, I do a bit of explanation. I continue observing",MON,G,TAB,F
+40,910000,15m10s,2,0,"Looking at one of the groups playing. When the bug moves incorrectly, I do a bit of explanation. I continue observing",REP,G,TAB,F
+41,915000,15m15s,2,0,"Looking at one of the groups playing. When the bug moves incorrectly, I do a bit of explanation. I continue observing",REP,G,TAB,F
+42,920000,15m20s,2,0,"Looking at one of the groups playing. When the bug moves incorrectly, I do a bit of explanation. I continue observing",REP,G,TAB,F
+43,935000,15m35s,2,0,"Looking at one of the groups playing. When the bug moves incorrectly, I do a bit of explanation. I continue observing",MON,G,TAB,F
+44,1040000,17m20s,2,0,Distributing manipulables to one group,TDT,G,TAB,F
+45,1115000,18m35s,2,0,"Distributing manipulatives to another group, to start a new activity",TDT,G,TAB,T
+46,1120000,18m40s,2,0,"Distributing manipulatives to another group, to start a new activity",TDT,G,TAB,F
+47,1125000,18m45s,2,0,"Distributing manipulatives to another group, to start a new activity",TDT,G,TAB,F
+48,1175000,19m35s,2,0,Going to the desk to look for paper elements for a group,TDT,G,MD,T
+49,1190000,19m50s,2,0,Explaining the hints to a group,EXP,G,TAB,F
+50,1255000,20m55s,2,0,"Listening as one of the groups explains its problems, I do a bit of explanation",REP,G,TAB,F
+51,1260000,21m0s,2,0,"Listening as one of the groups explains its problems, I do a bit of explanation",REP,G,TAB,F
+52,1265000,21m5s,2,0,"Listening as one of the groups explains its problems, I do a bit of explanation",REP,G,TAB,F
+53,1270000,21m10s,2,0,"Listening as one of the groups explains its problems, I do a bit of explanation",REP,G,TAB,F
+54,1285000,21m25s,2,0,"I go into one of the groups where the go card didnt work, but it works now",MON,G,TAB,F
+55,1320000,22m0s,2,0,"The lamp just rebooted, I look as the group starts playing again",MON,G,TAB,F
+56,1345000,22m25s,2,0,I look around and go into one of the groups to see how they do,MON,C,TAB,T
+57,1350000,22m30s,2,0,I look as one of the groups play,MON,G,TAB,F
+58,1355000,22m35s,2,0,I do explanation to avoid occlusions,REP,G,TAB,F
+59,1370000,22m50s,2,0,Looking at one of the groups playing,MON,G,TAB,F
+60,1375000,22m55s,2,0,I do abit of explanation,REP,G,TAB,F
+61,1395000,23m15s,2,0,I do abit of explanation,REP,G,TAB,F
+62,1400000,23m20s,2,0,I do abit of explanation,REP,G,TAB,F
+63,1405000,23m25s,2,0,I do abit of explanation,REP,G,TAB,F
+64,1410000,23m30s,2,0,I do abit of explanation,REP,G,TAB,F
+65,1420000,23m40s,2,0,I do abit of explanation,REP,G,TAB,F
+66,1495000,24m55s,2,0,"Explanation of how to use the tokens, to a group",TDT,G,TAB,F
+67,1515000,25m15s,2,0,"Explanation of how to use the tokens, to a group",EXP,G,TAB,F
+68,1525000,25m25s,2,0,"After looking around, I go into another group",MON,C or G,BAK or TAB,T
+69,1530000,25m30s,2,0,"I look as one of the groups play, with small explanations in between",MON,G,TAB,F
+70,1535000,25m35s,2,0,"I look as one of the groups play, with small explanations in between",MON,G,TAB,F
+71,1540000,25m40s,2,0,"I look as one of the groups play, with small explanations in between",MON,G,TAB,F
+72,1555000,25m55s,2,0,"I look as one of the groups play, with small explanations in between",MON,G,TAB,F
+73,1560000,26m0s,2,0,"I look as one of the groups play, with small explanations in between",MON,G,TAB,F
+74,1565000,26m5s,2,0,"I look as one of the groups play, with small explanations in between",MON,G,TAB,F
+75,1570000,26m10s,2,0,"I look as one of the groups play, with small explanations in between",MON,G,TAB,F
+76,1580000,26m20s,2,0,"I look as one of the groups play, with small explanations in between",MON,G,TAB,F
+77,1585000,26m25s,2,0,"I look as one of the groups play, with small explanations in between",MON,G,TAB,F
+78,1675000,27m55s,2,0,"I talk with one of the groups, apparently the application crashed",REP,G,TAB,T
+79,1750000,29m10s,2,0,"While the lamp is restarting, I explain to one of the groups the dynamic",EXP,G,TAB or M,F
+80,1785000,29m45s,2,0,"The lamp comes back again. I continue explaining, and then place the papers for continue playing",REP,G,TAB,F
+81,1790000,29m50s,2,0,"The lamp comes back again. I continue explaining, and then place the papers for continue playing",REP,G,TAB,F
+82,1795000,29m55s,2,0,"The lamp comes back again. I continue explaining, and then place the papers for continue playing",REP,G,TAB,F
+83,1815000,30m15s,2,0,I do some explanation about where the bug will move,EXP,G,TAB,F
+84,1905000,31m45s,2,0,"I come to a group with the new map, and provide the paper elements for the next phase. As I explain the hints, the lamp crashes",TDT,G,TAB,T
+85,1920000,32m0s,2,0,"I come to a group with the new map, and provide the paper elements for the next phase. As I explain the hints, the lamp crashes",TDT,G,TAB,F
+86,1935000,32m15s,2,0,"I come to a group with the new map, and provide the paper elements for the next phase. As I explain the hints, the lamp crashes",TDT,G,TAB,F
+87,1940000,32m20s,2,0,"I come to a group with the new map, and provide the paper elements for the next phase. As I explain the hints, the lamp crashes",TDT,G,TAB,F
+88,1945000,32m25s,2,0,"I come to a group with the new map, and provide the paper elements for the next phase. As I explain the hints, the lamp crashes",TDT,G,TAB,F
+89,1950000,32m30s,2,0,"I come to a group with the new map, and provide the paper elements for the next phase. As I explain the hints, the lamp crashes",TDT,G,TAB,F
+90,1955000,32m35s,2,0,"I come to a group with the new map, and provide the paper elements for the next phase. As I explain the hints, the lamp crashes",TDT,G,TAB,F
+91,1960000,32m40s,2,0,"I come to a group with the new map, and provide the paper elements for the next phase. As I explain the hints, the lamp crashes",REP,G,TAB,F
+92,2040000,34m0s,2,0,"I help one of the groups, where some paper elements do not seem to work",REP,G,TAB,F
+93,2055000,34m15s,2,0,"I help one of the groups, where some paper elements do not seem to work",REP,G,TAB,F
+94,2145000,35m45s,2,0,"I go into one of the groups, to see how they do",MON,G,TAB,F
+95,2170000,36m10s,2,0,Conversation with Wen about timing,TDT,C,WEN,F
+96,2195000,36m35s,2,0,"I go into one of the groups, and try to explain what they are doing wrong",REP,G,TAB,F
+97,2280000,38m0s,2,0,"I go into one of the groups, and try to explain what they are doing wrong",REP,G,TAB,F
+98,2365000,39m25s,2,0,"I go into one of the groups, to see how they do",MON,G,TAB,F
+99,2450000,40m50s,2,0,I am looking to how one of the groups play,MON,G,TAB,F
+100,2455000,40m55s,2,0,I am looking to how one of the groups play,MON,G,TAB,F
+1,40000,0m40s,3,0,,,,,
+2,70000,1m10s,3,0,,,,,
+3,75000,1m15s,3,0,,,,,
+4,80000,1m20s,3,0,,,,,
+5,85000,1m25s,3,0,,,,,
+6,165000,2m45s,3,0,,,,,
+7,170000,2m50s,3,0,,,,,
+8,175000,2m55s,3,0,,,,,
+9,180000,3m0s,3,0,,,,,
+10,225000,3m45s,3,0,,,,,
+11,305000,5m5s,3,0,,,,,
+12,310000,5m10s,3,0,,,,,
+13,395000,6m35s,3,0,,,,,
+14,4.00E+05,6m40s,3,0,,,,,
+15,460000,7m40s,3,0,,,,,
+16,555000,9m15s,3,0,,,,,
+17,560000,9m20s,3,0,,,,,
+18,565000,9m25s,3,0,,,,,
+19,580000,9m40s,3,0,,,,,
+20,585000,9m45s,3,0,,,,,
+21,590000,9m50s,3,0,,,,,
+22,630000,10m30s,3,0,,,,,
+23,770000,12m50s,3,0,,,,,
+24,825000,13m45s,3,0,,,,,
+25,830000,13m50s,3,0,,,,,
+26,835000,13m55s,3,0,,,,,
+27,860000,14m20s,3,0,,,,,
+28,865000,14m25s,3,0,,,,,
+29,940000,15m40s,3,0,,,,,
+30,985000,16m25s,3,0,,,,,
+31,990000,16m30s,3,0,,,,,
+32,1005000,16m45s,3,0,,,,,
+33,1010000,16m50s,3,0,,,,,
+34,1030000,17m10s,3,0,,,,,
+35,1035000,17m15s,3,0,,,,,
+36,1050000,17m30s,3,0,,,,,
+37,1055000,17m35s,3,0,,,,,
+38,1100000,18m20s,3,0,,,,,
+39,1105000,18m25s,3,0,,,,,
+40,1110000,18m30s,3,0,,,,,
+41,1115000,18m35s,3,0,,,,,
+42,1140000,19m0s,3,0,,,,,
+43,1165000,19m25s,3,0,,,,,
+44,1170000,19m30s,3,0,,,,,
+45,1180000,19m40s,3,0,,,,,
+46,1185000,19m45s,3,0,,,,,
+47,1190000,19m50s,3,0,,,,,
+48,1390000,23m10s,3,0,,,,,
+49,1395000,23m15s,3,0,,,,,
+50,1400000,23m20s,3,0,,,,,
+51,1405000,23m25s,3,0,,,,,
+52,1480000,24m40s,3,0,,,,,
+53,1485000,24m45s,3,0,,,,,
+54,1490000,24m50s,3,0,,,,,
+55,1495000,24m55s,3,0,,,,,
+56,1500000,25m0s,3,0,,,,,
+57,1505000,25m5s,3,0,,,,,
+58,1510000,25m10s,3,0,,,,,
+59,1525000,25m25s,3,0,,,,,
+60,1530000,25m30s,3,0,,,,,
+61,1535000,25m35s,3,0,,,,,
+62,1545000,25m45s,3,0,,,,,
+63,1550000,25m50s,3,0,,,,,
+64,1635000,27m15s,3,0,,,,,
+65,1660000,27m40s,3,0,,,,,
+66,1700000,28m20s,3,0,,,,,
+67,1715000,28m35s,3,0,,,,,
+68,1720000,28m40s,3,0,,,,,
+69,1725000,28m45s,3,0,,,,,
+70,1740000,29m0s,3,0,,,,,
+71,1745000,29m5s,3,0,,,,,
+72,1840000,30m40s,3,0,,,,,
+73,1845000,30m45s,3,0,,,,,
+74,1870000,31m10s,3,0,,,,,
+75,1875000,31m15s,3,0,,,,,
+76,1885000,31m25s,3,0,,,,,
+77,1890000,31m30s,3,0,,,,,
+78,1895000,31m35s,3,0,,,,,
+79,1900000,31m40s,3,0,,,,,
+80,1915000,31m55s,3,0,,,,,
+81,1920000,32m0s,3,0,,,,,
+82,1950000,32m30s,3,0,,,,,
+83,1955000,32m35s,3,0,,,,,
+84,1960000,32m40s,3,0,,,,,
+85,2060000,34m20s,3,0,,,,,
+86,2080000,34m40s,3,0,,,,,
+87,2290000,38m10s,3,0,,,,,
+88,2295000,38m15s,3,0,,,,,
+1,10000,0m10s,6,0,,,,,
+2,15000,0m15s,6,0,,,,,
+3,120000,2m0s,6,0,,,,,
+4,255000,4m15s,6,0,,,,,
+5,290000,4m50s,6,0,,,,,
+6,305000,5m5s,6,0,,,,,
+7,350000,5m50s,6,0,,,,,
+8,415000,6m55s,6,0,,,,,
+9,420000,7m0s,6,0,,,,,
+10,5.00E+05,8m20s,6,0,,,,,
+11,545000,9m5s,6,0,,,,,
+12,550000,9m10s,6,0,,,,,
+13,555000,9m15s,6,0,,,,,
+14,560000,9m20s,6,0,,,,,
+15,615000,10m15s,6,0,,,,,
+16,620000,10m20s,6,0,,,,,
+17,635000,10m35s,6,0,,,,,
+18,640000,10m40s,6,0,,,,,
+19,665000,11m5s,6,0,,,,,
+20,780000,13m0s,6,0,,,,,
+21,855000,14m15s,6,0,,,,,
+22,875000,14m35s,6,0,,,,,
+23,880000,14m40s,6,0,,,,,
+24,885000,14m45s,6,0,,,,,
+25,890000,14m50s,6,0,,,,,
+26,895000,14m55s,6,0,,,,,
+27,9.00E+05,15m0s,6,0,,,,,
+28,905000,15m5s,6,0,,,,,
+29,980000,16m20s,6,0,,,,,
+30,1.00E+06,16m40s,6,0,,,,,
+31,1140000,19m0s,6,0,,,,,
+32,1145000,19m5s,6,0,,,,,
+33,1200000,20m0s,6,0,,,,,
+34,1205000,20m5s,6,0,,,,,
+35,1210000,20m10s,6,0,,,,,
+36,1240000,20m40s,6,0,,,,,
+37,1275000,21m15s,6,0,,,,,
+38,1360000,22m40s,6,0,,,,,
+39,1400000,23m20s,6,0,,,,,
+40,1410000,23m30s,6,0,,,,,
+41,1430000,23m50s,6,0,,,,,
+42,1440000,24m0s,6,0,,,,,
+43,1445000,24m5s,6,0,,,,,
+44,1450000,24m10s,6,0,,,,,
+45,1455000,24m15s,6,0,,,,,
+46,1505000,25m5s,6,0,,,,,
+47,1510000,25m10s,6,0,,,,,
+48,1535000,25m35s,6,0,,,,,
+49,1540000,25m40s,6,0,,,,,
+50,1575000,26m15s,6,0,,,,,
+51,1580000,26m20s,6,0,,,,,
+52,1585000,26m25s,6,0,,,,,
+53,1590000,26m30s,6,0,,,,,
+54,1625000,27m5s,6,0,,,,,
+55,1670000,27m50s,6,0,,,,,
+56,1675000,27m55s,6,0,,,,,
+57,1715000,28m35s,6,0,,,,,
+58,1720000,28m40s,6,0,,,,,
+59,1725000,28m45s,6,0,,,,,
+60,1730000,28m50s,6,0,,,,,
+61,1735000,28m55s,6,0,,,,,
+62,1740000,29m0s,6,0,,,,,
+63,1780000,29m40s,6,0,,,,,
+64,1785000,29m45s,6,0,,,,,
+65,1790000,29m50s,6,0,,,,,
+66,1815000,30m15s,6,0,,,,,
+67,1830000,30m30s,6,0,,,,,
+68,1835000,30m35s,6,0,,,,,
+69,1840000,30m40s,6,0,,,,,
+70,1875000,31m15s,6,0,,,,,
+71,1885000,31m25s,6,0,,,,,
+72,1890000,31m30s,6,0,,,,,
+73,1895000,31m35s,6,0,,,,,
+74,1995000,33m15s,6,0,,,,,
+75,2110000,35m10s,6,0,,,,,
+76,2160000,36m0s,6,0,,,,,
+77,2235000,37m15s,6,0,,,,,
+78,2240000,37m20s,6,0,,,,,
+79,2245000,37m25s,6,0,,,,,
+80,2315000,38m35s,6,0,,,,,
+81,2370000,39m30s,6,0,,,,,
+82,2390000,39m50s,6,0,,,,,
