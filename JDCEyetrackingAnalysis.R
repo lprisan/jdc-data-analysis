@@ -101,7 +101,7 @@ jointEyetrackerPlots <- function(pupildata, fixdata, sacdata, window=30, slide=5
     
     p5 <- ggplot(totaldata, aes(x=time, y=Load)) + 
       ggtitle(paste("Estimation of cognitive overload over ",window,"s",sep="")) + 
-      geom_line() #+ stat_smooth(method="loess",span=0.1)
+      geom_line() + stat_smooth(method="loess",span=0.02)
     
     #multiplot(p1, p2, p3, p4, p5, cols=1)
     multiplot(p2, p3, p4, p5, cols=1)
