@@ -1,6 +1,6 @@
 require("ggplot2")
 require("zoo")
-
+require("scales")
 
 # JDCEyetrackingAnalysis - this function analyzes and creates a series of graphs using the eyetracking data from the JDC experiment.
 # It receives as an optional parameter the folder where the (pre-processed) eyetracking data (Eyetracker*.rda) is
@@ -53,7 +53,8 @@ jointEyetrackerPlots <- function(pupildata, fixdata, sacdata, window=30, slide=5
     else meansessionavg <- mean(meandata$value)
     p1 <- ggplot(meandata, aes(x=time, y=value)) + 
       ggtitle(paste("Pupil diameter MEAN over ",window,"s",sep="")) + 
-      geom_line() + geom_hline(yintercept=meansessionavg)
+      geom_line() + geom_hline(yintercept=meansessionavg) +
+      theme(plot.title=element_text(size=25),axis.title=element_text(size=18))
 
     # We get the PD standard deviation over a rolling window with the parameters set when calling the function (everything in ms)
     sddata <- rollingSd(pupilsessions[[i]]$Time.ms,pupilsessions[[i]]$L.Pupil.Diameter..mm.,window*1000,slide*1000)
@@ -62,7 +63,8 @@ jointEyetrackerPlots <- function(pupildata, fixdata, sacdata, window=30, slide=5
     else sdsessionavg <- mean(sddata$value)
     p2 <- ggplot(sddata, aes(x=time, y=value)) + 
       ggtitle(paste("Pupil diameter SD over ",window,"s",sep="")) + 
-      geom_line() + geom_hline(yintercept=sdsessionavg)
+      geom_line() + geom_hline(yintercept=sdsessionavg) +
+      theme(plot.title=element_text(size=25),axis.title=element_text(size=18))
     
     # We get the number of long fixations in the window
     longdata <- rollingLong(fixsessions[[i]]$Time.ms,fixsessions[[i]]$Fixation.Duration..ms.,window*1000,slide*1000)
@@ -71,8 +73,10 @@ jointEyetrackerPlots <- function(pupildata, fixdata, sacdata, window=30, slide=5
     else longsessionavg <- mean(longdata$value)
     p3 <- ggplot(longdata, aes(x=time, y=value)) + 
       ggtitle(paste("Fixations >500ms over ",window,"s",sep="")) + 
-      geom_line() + geom_hline(yintercept=longsessionavg)
-
+      geom_line() + geom_hline(yintercept=longsessionavg) +
+      theme(plot.title=element_text(size=25),axis.title=element_text(size=18))
+    
+    
     # We get the saccade speed in the window
     sacspdata <- rollingMean(sacsessions[[i]]$Time.ms,sacsessions[[i]]$Saccade.Speed,window*1000,slide*1000)
     sacsessionavg <- 0
@@ -80,7 +84,9 @@ jointEyetrackerPlots <- function(pupildata, fixdata, sacdata, window=30, slide=5
     else sacsessionavg <- mean(sacspdata$value)
     p4 <- ggplot(sacspdata, aes(x=time, y=value)) + 
       ggtitle(paste("Saccade speed over ",window,"s",sep="")) + 
-      geom_line() + geom_hline(yintercept=sacsessionavg)
+      geom_line() + geom_hline(yintercept=sacsessionavg) +
+      theme(plot.title=element_text(size=25),axis.title=element_text(size=18))
+    
 
     # We try to get how many measures went over the average at a given point in time... 
     # first, we merge all data frames
@@ -98,18 +104,56 @@ jointEyetrackerPlots <- function(pupildata, fixdata, sacdata, window=30, slide=5
     #totaldata$Load <- totaldata$Above.Mean + totaldata$Above.SD + totaldata$Above.Fix + totaldata$Above.Sac
     # By now, we leav out the mean PD, as it seems to be unreliable
     totaldata$Load <- totaldata$Above.SD + totaldata$Above.Fix + totaldata$Above.Sac
+    totaldata$Session <- pupilsessions[[i]]$Session[[1]]
+    
+    save(totaldata,file=paste("TotalEyetrackingData","Session",pupilsessions[[i]]$Session[[1]],"rda",sep="."),compress=TRUE)
+    
     
     p5 <- ggplot(totaldata, aes(x=time, y=Load)) + 
       ggtitle(paste("Estimation of cognitive overload over ",window,"s",sep="")) + 
-      geom_line() + stat_smooth(method="loess",span=0.02)
+      geom_line(size=1) +
+      theme(plot.title=element_text(size=28, face="bold"),axis.title=element_text(size=18),panel.background = element_rect(fill = 'lightgreen'))
+    #+ stat_smooth(method="loess",span=0.02) +
     
     #multiplot(p1, p2, p3, p4, p5, cols=1)
     multiplot(p2, p3, p4, p5, cols=1)
     dev.off()
    
-    #We do run length compression onto the load data, to detect interesting episodes
-    #runs <- rle(totaldata$Load)
+    # We do a vertical version of the load graphs
+    #scale_colour_gradient2(..., low = muted("green"), mid = "white", high = muted("red"), 
+    #                       midpoint = 0, space = "rgb", na.value = "grey50", guide = "colourbar")
+    #scale_fill_gradient2(..., low = muted("green"), mid = "white", high = muted("red"), 
+    #                     midpoint = 0, space = "rgb", na.value = "grey50", guide = "colourbar")
     
+    
+    png(paste("Vertical.Eyetrack.Session",pupilsessions[[i]]$Session[[1]],".window",window,"s.slide",slide,"s.",meanormedian,".png",sep=""),width=1024,height=1920)  
+    p1 <- ggplot(meandata, aes(x=time, y=value)) + 
+      ggtitle("Pupil diam. MEAN") + 
+      geom_line() + geom_hline(yintercept=meansessionavg) +
+      theme(axis.text.x = element_text(size=18),axis.text.y = element_blank(),plot.title=element_text(size=28),axis.title=element_text(size=30)) + coord_flip()
+    p2 <- ggplot(sddata, aes(x=time, y=value)) + 
+      ggtitle("Pupil diam. SD") +
+      geom_line() + geom_hline(yintercept=sdsessionavg) +
+      theme(axis.text.x = element_text(size=18),axis.text.y = element_blank(),plot.title=element_text(size=28),axis.title=element_text(size=30)) + coord_flip()
+    p3 <- ggplot(longdata, aes(x=time, y=value)) + 
+      ggtitle("Fixations >500ms") + 
+      geom_line() + geom_hline(yintercept=longsessionavg) +
+      theme(axis.text.x = element_text(size=18),axis.text.y = element_blank(),plot.title=element_text(size=28),axis.title=element_text(size=30)) + coord_flip()
+    p4 <- ggplot(sacspdata, aes(x=time, y=value)) + 
+      ggtitle("Saccade speed") + 
+      geom_line() + geom_hline(yintercept=sacsessionavg) +
+      theme(axis.text.x = element_text(size=18),axis.text.y = element_blank(),plot.title=element_text(size=28),axis.title=element_text(size=30)) + coord_flip()
+    p5 <- ggplot(totaldata, aes(x=time, y=Load, col=Load)) + 
+      ggtitle("Load index") + 
+      geom_line(size=2) +
+      theme(axis.text.x = element_text(size=24),axis.text.y = element_blank(),plot.title=element_text(size=36, face="bold"),axis.title=element_text(size=30),panel.background = element_rect(fill = 'white')) + coord_flip() + scale_color_gradient(low="green",high="red")
+    multiplot(p2, p3, p4, p5, cols=4)
+    dev.off()
+    
+    
+    
+    
+    # We store the loaded and unloaded episodes, for further analysis
     interesting <- totaldata[totaldata$Load>=max(totaldata$Load),"time"]
     
     dataToLook <- as.data.frame(interesting)

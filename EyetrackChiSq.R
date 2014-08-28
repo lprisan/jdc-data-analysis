@@ -1,30 +1,38 @@
+library(ggplot2)
+
 setwd('~/workspace/jdc-data-analysis/eyetrack/')
 
-data0 <- read.csv("3Metrics.Load0.window10s.slide5s.csv",as.is=T)
+data0 <- read.csv("3Metrics.Load0.window10s.slide5s.csv")
 
-data3 <- read.csv("3Metrics.Load3.window10s.slide5s.csv",as.is=T)
+data3 <- read.csv("3Metrics.Load3.window10s.slide5s.csv")
 
 data <- rbind(data0,data3)
 
-#data <- data[data$Session==2,]
-#We eliminate the only individual occurrence, as it makes the social variable strange
-data <- data[data$Session==2 & data$Social!="I",]
-
-
-# We only get the first option in the doubtful codes
-data$Activity <- as.factor(substr(data$Activity,1,3))
-data$Social <- as.factor(substr(data$Social,1,1))
-data$Focus <- as.factor(substr(data$Focus,1,3))
 data$Load <- as.factor(data$Load)
 
-tabAct <- table(data$Load,data$Activity) # Apparently not significant
-chisq.test(tabAct)
+print(tabAct <- table(data$Load,data$Activity))
+print(chisq.test(tabAct))
 
-tabSoc <- table(data$Load,data$Social) # This one looks significant
-chisq.test(tabSoc)
+print(tabSoc <- table(data$Load,data$Social))
+print(chisq.test(tabSoc))
 
-tabFoc <- table(data$Load,data$Focus) # This one looks significant also
-chisq.test(tabFoc)
+print(tabFoc <- table(data$Load,data$Focus))
+print(chisq.test(tabFoc))
 
-tabCha <- table(data$Load,data$Changing.visual.field.a.lot) # This one also looks significant
-chisq.test(tabCha)
+print(tabCha <- table(data$Load,data$Changing.visual.field.a.lot))
+print(chisq.test(tabCha))
+
+#TODO: do a simple histogram of the distribution of the different variables
+barplot(table(data$Activity))
+barplot(table(data$Social))
+barplot(table(data$Focus))
+barplot(table(data$Changing.visual.field.a.lot))
+
+eyedata2 <- get(load("TotalEyetrackingData.Session.2.rda"))
+eyedata3 <- get(load("TotalEyetrackingData.Session.3.rda"))
+eyedata6 <- get(load("TotalEyetrackingData.Session.6.rda"))
+
+eyedata <- rbind(eyedata2,eyedata3,eyedata6)
+
+totaldata <- merge(x=data,y=eyedata,by.x=c("Session","Time.ms"), by.y=c("Session","time"),all=T)
+completedata <- totaldata[complete.cases(totaldata),]
