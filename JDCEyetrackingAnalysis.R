@@ -54,7 +54,7 @@ jointEyetrackerPlots <- function(pupildata, fixdata, sacdata, window=30, slide=5
     p1 <- ggplot(meandata, aes(x=time, y=value)) + 
       ggtitle(paste("Pupil diameter MEAN over ",window,"s",sep="")) + 
       geom_line() + geom_hline(yintercept=meansessionavg) +
-      theme(plot.title=element_text(size=25),axis.title=element_text(size=18))
+      theme(axis.text.x = element_blank(),plot.title=element_text(size=25),axis.title=element_text(size=18))
 
     # We get the PD standard deviation over a rolling window with the parameters set when calling the function (everything in ms)
     sddata <- rollingSd(pupilsessions[[i]]$Time.ms,pupilsessions[[i]]$L.Pupil.Diameter..mm.,window*1000,slide*1000)
@@ -64,7 +64,7 @@ jointEyetrackerPlots <- function(pupildata, fixdata, sacdata, window=30, slide=5
     p2 <- ggplot(sddata, aes(x=time, y=value)) + 
       ggtitle(paste("Pupil diameter SD over ",window,"s",sep="")) + 
       geom_line() + geom_hline(yintercept=sdsessionavg) +
-      theme(plot.title=element_text(size=25),axis.title=element_text(size=18))
+      theme(axis.text.x = element_blank(),plot.title=element_text(size=25),axis.title=element_text(size=18))
     
     # We get the number of long fixations in the window
     longdata <- rollingLong(fixsessions[[i]]$Time.ms,fixsessions[[i]]$Fixation.Duration..ms.,window*1000,slide*1000)
@@ -74,7 +74,7 @@ jointEyetrackerPlots <- function(pupildata, fixdata, sacdata, window=30, slide=5
     p3 <- ggplot(longdata, aes(x=time, y=value)) + 
       ggtitle(paste("Fixations >500ms over ",window,"s",sep="")) + 
       geom_line() + geom_hline(yintercept=longsessionavg) +
-      theme(plot.title=element_text(size=25),axis.title=element_text(size=18))
+      theme(axis.text.x = element_blank(),plot.title=element_text(size=25),axis.title=element_text(size=18))
     
     
     # We get the saccade speed in the window
@@ -85,7 +85,7 @@ jointEyetrackerPlots <- function(pupildata, fixdata, sacdata, window=30, slide=5
     p4 <- ggplot(sacspdata, aes(x=time, y=value)) + 
       ggtitle(paste("Saccade speed over ",window,"s",sep="")) + 
       geom_line() + geom_hline(yintercept=sacsessionavg) +
-      theme(plot.title=element_text(size=25),axis.title=element_text(size=18))
+      theme(axis.text.x = element_blank(),plot.title=element_text(size=25),axis.title=element_text(size=18))
     
 
     # We try to get how many measures went over the average at a given point in time... 
@@ -109,10 +109,11 @@ jointEyetrackerPlots <- function(pupildata, fixdata, sacdata, window=30, slide=5
     save(totaldata,file=paste("TotalEyetrackingData","Session",pupilsessions[[i]]$Session[[1]],"rda",sep="."),compress=TRUE)
     
     
-    p5 <- ggplot(totaldata, aes(x=time, y=Load)) + 
-      ggtitle(paste("Estimation of cognitive overload over ",window,"s",sep="")) + 
+    p5 <- ggplot(totaldata, aes(x=time, y=Load, col=Load)) + 
+      ggtitle(paste("Load Index (estimation of cognitive overload over ",window,"s)",sep="")) + 
       geom_line(size=1) +
-      theme(plot.title=element_text(size=28, face="bold"),axis.title=element_text(size=18),panel.background = element_rect(fill = 'lightgreen'))
+      theme(axis.text.x = element_blank(),plot.title=element_text(size=28, face="bold"),axis.title=element_text(size=18),panel.background = element_rect(fill = 'white')) +
+      scale_color_gradient(low="green",high="red")
     #+ stat_smooth(method="loess",span=0.02) +
     
     #multiplot(p1, p2, p3, p4, p5, cols=1)
@@ -128,25 +129,32 @@ jointEyetrackerPlots <- function(pupildata, fixdata, sacdata, window=30, slide=5
     
     png(paste("Vertical.Eyetrack.Session",pupilsessions[[i]]$Session[[1]],".window",window,"s.slide",slide,"s.",meanormedian,".png",sep=""),width=1024,height=1920)  
     p1 <- ggplot(meandata, aes(x=time, y=value)) + 
-      ggtitle("Pupil diam. MEAN") + 
+      ggtitle("Pupil diam.\nMEAN") + 
       geom_line() + geom_hline(yintercept=meansessionavg) +
-      theme(axis.text.x = element_text(size=18),axis.text.y = element_blank(),plot.title=element_text(size=28),axis.title=element_text(size=30)) + coord_flip()
+      theme(axis.text.x = element_blank(),axis.text.y = element_blank(),plot.title=element_text(size=36),axis.title=element_text(size=32)) + coord_flip()
     p2 <- ggplot(sddata, aes(x=time, y=value)) + 
-      ggtitle("Pupil diam. SD") +
+      ggtitle("Pupil\ndiam. SD") +
       geom_line() + geom_hline(yintercept=sdsessionavg) +
-      theme(axis.text.x = element_text(size=18),axis.text.y = element_blank(),plot.title=element_text(size=28),axis.title=element_text(size=30)) + coord_flip()
+      theme(axis.text.x = element_blank(),axis.text.y = element_blank(),plot.title=element_text(size=36),axis.title=element_text(size=32)) + coord_flip()
     p3 <- ggplot(longdata, aes(x=time, y=value)) + 
-      ggtitle("Fixations >500ms") + 
+      ggtitle("Fixations\n>500ms") + 
       geom_line() + geom_hline(yintercept=longsessionavg) +
-      theme(axis.text.x = element_text(size=18),axis.text.y = element_blank(),plot.title=element_text(size=28),axis.title=element_text(size=30)) + coord_flip()
+      theme(axis.text.x = element_blank(),axis.text.y = element_blank(),plot.title=element_text(size=36),axis.title=element_text(size=32)) + coord_flip()
     p4 <- ggplot(sacspdata, aes(x=time, y=value)) + 
-      ggtitle("Saccade speed") + 
+      ggtitle("Saccade\nspeed") + 
       geom_line() + geom_hline(yintercept=sacsessionavg) +
-      theme(axis.text.x = element_text(size=18),axis.text.y = element_blank(),plot.title=element_text(size=28),axis.title=element_text(size=30)) + coord_flip()
+      theme(axis.text.x = element_blank(),axis.text.y = element_blank(),plot.title=element_text(size=36),axis.title=element_text(size=32)) + coord_flip()
     p5 <- ggplot(totaldata, aes(x=time, y=Load, col=Load)) + 
-      ggtitle("Load index") + 
+      ggtitle("Load\nindex") + 
       geom_line(size=2) +
-      theme(axis.text.x = element_text(size=24),axis.text.y = element_blank(),plot.title=element_text(size=36, face="bold"),axis.title=element_text(size=30),panel.background = element_rect(fill = 'white')) + coord_flip() + scale_color_gradient(low="green",high="red")
+      theme(axis.text.x = element_text(size=30),
+            axis.text.y = element_blank(),
+            plot.title=element_text(size=42, face="bold"),
+            axis.title=element_text(size=36),
+            panel.background = element_rect(fill = 'white'), 
+            legend.title=element_text(size=24), 
+            legend.text=element_text(size=20),
+            legend.title.align=0.5) + coord_flip() + scale_color_gradient(low="green",high="red")
     multiplot(p2, p3, p4, p5, cols=4)
     dev.off()
     
