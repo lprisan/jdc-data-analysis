@@ -26,7 +26,10 @@ The main input for the following analyses is the raw event data from the recordi
     * Number of fixations >500ms
     * Average saccade speed
 
-```{r, cache=TRUE, echo=TRUE, message=FALSE}
+**TODO: Change fields to extract from number to name, plus manual addition of Dummy field in raw data**
+
+
+```{r, cache=TRUE, echo=FALSE, message=FALSE}
 # Some basic parameters for the sliding windows (in seconds)
 window <- 10
 slide <- 5
@@ -101,40 +104,191 @@ for (session in sessions){
     # We get the rolling window for the mean pupil diameter, and its median value for a median cut
     meandata <- rollingMean(pupildata$Time.ms,pupildata$L.Pupil.Diameter..mm.,window*1000,slide*1000)
     meanPDmedian <- median(meandata$value)
-
+    meandata$above <- as.numeric(meandata$value > meanPDmedian)
+    
     # We get the rolling window for the SD of pupil diameter, and its median value for a median cut
     sddata <- rollingSd(pupildata$Time.ms,pupildata$L.Pupil.Diameter..mm.,window*1000,slide*1000)
     sdPDmedian <- median(sddata$value)
+    sddata$above <- as.numeric(sddata$value > sdPDmedian)
 
     # We get the number of long fixations in the window, and its median
     longdata <- rollingLong(fixdata$Time.ms,fixdata$Fixation.Duration..ms.,window*1000,slide*1000)
     longFixMedian <- median(longdata$value)
+    longdata$above <- as.numeric(longdata$value > longFixMedian)
 
     # We get the saccade speed in the window
     sacspdata <- rollingMean(sacdata$Time.ms,sacdata$Saccade.Speed,window*1000,slide*1000)
     sacSpMedian <- median(sacspdata$value)
+    sacspdata$above <- as.numeric(sacspdata$value > sacSpMedian)
     
+    totaldata <- merge(meandata,sddata,by="time",suffixes = c(".Mean",".SD"),all=T)
+    totaldata <- merge(totaldata,longdata,by="time",all=T)
+    names(totaldata)[[6]] <- paste(names(totaldata)[[6]],"Fix",sep=".")
+    names(totaldata)[[7]] <- paste(names(totaldata)[[7]],"Fix",sep=".")
+    totaldata <- merge(totaldata,sacspdata,by="time",all=T)
+    names(totaldata)[[8]] <- paste(names(totaldata)[[8]],"Sac",sep=".")
+    names(totaldata)[[9]] <- paste(names(totaldata)[[9]],"Sac",sep=".")
+
+    totaldata$Load <- totaldata$above.Mean + totaldata$above.SD + totaldata$above.Fix + totaldata$above.Sac
+
     # We save all the (clean) window data in a file, for later use
-    save(meandata,meanPDmedian,sddata,sdPDmedian,longdata,longFixMedian,sacspdata,sacSpMedian,file=paste("./cleandata/",session,".CognitiveLoadMetrics.rda",sep=""))
+    save(totaldata,meanPDmedian,sdPDmedian,longFixMedian,sacSpMedian,file=paste("./cleandata/",session,".CognitiveLoadMetrics.rda",sep=""))
     
 }
 ```
 
-After doing this pre-processing, we have four data frames per each session, looking like:
+After doing this pre-processing, we have a data frame per each session, looking like:
 
 ```{r}
 session <- sessions[1]
 load(paste("./cleandata/",session,".CognitiveLoadMetrics.rda",sep=""))
-head(meandata, n=3)
-head(sddata, n=3)
-head(longdata, n=3)
-head(sacspdata, n=3)
+head(totaldata, n=3)
 ```
 
 Analysis for T2S1 (Pierre)
 ------------------------------------------------
 
+We can inspect the different eyetracking parameters during this session, as well as our estimation of cognitive load of the teacher, calculated as **how many of these metrics surpass the median of the session**:
 
+```{r, message=FALSE, echo=FALSE, fig.height=2, fig.width=8}
+require(ggplot2)
+session <- "T2S1"
+load(paste("./cleandata/",session,".CognitiveLoadMetrics.rda",sep=""))
+
+p1 <- ggplot(totaldata, aes(x=time, y=value.Mean)) + 
+  ggtitle(paste("Pupil diameter MEAN over ",window,"s",sep="")) + 
+  geom_line() + geom_hline(yintercept=meanPDmedian) +
+  theme(axis.text.x = element_blank(),plot.title=element_text(size=20),axis.title=element_text(size=18))
+print(p1)
+
+p2 <- ggplot(totaldata, aes(x=time, y=value.SD)) + 
+  ggtitle(paste("Pupil diameter SD over ",window,"s",sep="")) + 
+  geom_line() + geom_hline(yintercept=sdPDmedian) +
+  theme(axis.text.x = element_blank(),plot.title=element_text(size=20),axis.title=element_text(size=18))
+print(p2)
+
+p3 <- ggplot(totaldata, aes(x=time, y=value.Fix)) + 
+  ggtitle(paste("Fixations >500ms over ",window,"s",sep="")) + 
+  geom_line() + geom_hline(yintercept=longFixMedian) +
+  theme(axis.text.x = element_blank(),plot.title=element_text(size=20),axis.title=element_text(size=18))
+print(p3)
+
+p4 <- ggplot(totaldata, aes(x=time, y=value.Sac)) + 
+  ggtitle(paste("Saccade speed over ",window,"s",sep="")) + 
+  geom_line() + geom_hline(yintercept=sacSpMedian) +
+  theme(axis.text.x = element_blank(),plot.title=element_text(size=20),axis.title=element_text(size=18))
+print(p4)
+
+p5 <- ggplot(totaldata, aes(x=time, y=Load, col=Load)) + 
+  ggtitle(paste("Load Index\n(estimation of cognitive overload over ",window,"s)",sep="")) + 
+  geom_line(size=1) +
+  theme(axis.text.x = element_blank(),plot.title=element_text(size=20, face="bold"),axis.title=element_text(size=18),panel.background = element_rect(fill = 'white')) +
+  scale_color_gradient(low="green",high="red")
+print(p5)
+
+```
+
+We can see how correlated these four measurements are to each other:
+
+```{r}
+#library(corrgram)
+
+cor(totaldata[,c("above.Mean","above.SD","above.Fix","above.Sac")])
+
+#corrgram(totaldata[,c("above.Mean","above.SD","above.Fix","above.Sac")], order=F, lower.panel=panel.shade,
+#  upper.panel=panel.pie, text.panel=panel.txt,
+#  main="Cognitive load metrics")
+```
+
+Oddly enough, **most of the correlations are negative**!
+
+
+We can now save the moments of maximum and minimum (estimated) load of the teacher, for later (manual) video coding.
+
+```{r}
+interesting <- totaldata[totaldata$Load>=max(totaldata$Load) | totaldata$Load<=min(totaldata$Load),c("time","Load")]
+dataToLook <- as.data.frame(interesting)
+names(dataToLook)[[1]] <- "Time.ms"
+dataToLook$Time.min <- msToMinSec(interesting$Time.ms)
+dataToLook$Session <- session
+
+write.csv(dataToLook, file=paste("./cleandata/InterestingEpisodes.",session,".window",window,"s.slide",slide,"s.csv",sep=""))
+```
+
+
+Analysis for T3S1 (Roland)
+------------------------------------------------
+
+We can inspect the different eyetracking parameters during this session, as well as our estimation of cognitive load of the teacher, calculated as **how many of these metrics surpass the median of the session**:
+
+```{r, message=FALSE, echo=FALSE, fig.height=2, fig.width=8}
+require(ggplot2)
+session <- "T3S1"
+load(paste("./cleandata/",session,".CognitiveLoadMetrics.rda",sep=""))
+
+# We eliminate non-complete intervals (the end of the fixation and saccade data appears to be missing)
+totaldata <- totaldata[complete.cases(totaldata),]
+#**TODO: check why???**
+
+
+p1 <- ggplot(totaldata, aes(x=time, y=value.Mean)) + 
+  ggtitle(paste("Pupil diameter MEAN over ",window,"s",sep="")) + 
+  geom_line() + geom_hline(yintercept=meanPDmedian) +
+  theme(axis.text.x = element_blank(),plot.title=element_text(size=20),axis.title=element_text(size=18))
+print(p1)
+
+p2 <- ggplot(totaldata, aes(x=time, y=value.SD)) + 
+  ggtitle(paste("Pupil diameter SD over ",window,"s",sep="")) + 
+  geom_line() + geom_hline(yintercept=sdPDmedian) +
+  theme(axis.text.x = element_blank(),plot.title=element_text(size=20),axis.title=element_text(size=18))
+print(p2)
+
+p3 <- ggplot(totaldata, aes(x=time, y=value.Fix)) + 
+  ggtitle(paste("Fixations >500ms over ",window,"s",sep="")) + 
+  geom_line() + geom_hline(yintercept=longFixMedian) +
+  theme(axis.text.x = element_blank(),plot.title=element_text(size=20),axis.title=element_text(size=18))
+print(p3)
+
+p4 <- ggplot(totaldata, aes(x=time, y=value.Sac)) + 
+  ggtitle(paste("Saccade speed over ",window,"s",sep="")) + 
+  geom_line() + geom_hline(yintercept=sacSpMedian) +
+  theme(axis.text.x = element_blank(),plot.title=element_text(size=20),axis.title=element_text(size=18))
+print(p4)
+
+p5 <- ggplot(totaldata, aes(x=time, y=Load, col=Load)) + 
+  ggtitle(paste("Load Index\n(estimation of cognitive overload over ",window,"s)",sep="")) + 
+  geom_line(size=1) +
+  theme(axis.text.x = element_blank(),plot.title=element_text(size=20, face="bold"),axis.title=element_text(size=18),panel.background = element_rect(fill = 'white')) +
+  scale_color_gradient(low="green",high="red")
+print(p5)
+
+```
+
+
+We can see how correlated these four measurements are to each other:
+
+```{r}
+#library(corrgram)
+cor(totaldata[,c("above.Mean","above.SD","above.Fix","above.Sac")])
+
+#corrgram(totaldata[,c("above.Mean","above.SD","above.Fix","above.Sac")], order=F, lower.panel=panel.shade,
+#  upper.panel=panel.pie, text.panel=panel.txt,
+#  main="Cognitive load metrics")
+```
+
+We can see how, again, most of the **correlations are negative, and in general quite small!**
+
+We can now save the moments of maximum and minimum (estimated) load of the teacher, for later (manual) video coding.
+
+```{r}
+interesting <- totaldata[totaldata$Load>=max(totaldata$Load) | totaldata$Load<=min(totaldata$Load),c("time","Load")]
+dataToLook <- as.data.frame(interesting)
+names(dataToLook)[[1]] <- "Time.ms"
+dataToLook$Time.min <- msToMinSec(interesting$Time.ms)
+dataToLook$Session <- session
+
+write.csv(dataToLook, file=paste("./cleandata/InterestingEpisodes.",session,".window",window,"s.slide",slide,"s.csv",sep=""))
+```
 
 
 References
