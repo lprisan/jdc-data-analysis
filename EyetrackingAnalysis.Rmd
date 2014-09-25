@@ -188,6 +188,12 @@ print(p5)
 
 ```
 
+We can draw a simple histogram of the load, to get an idea of its distribution:
+
+```{r}
+qplot(totaldata$Load, binwidth=1)
+```
+
 We can see how correlated these four measurements are to each other:
 
 ```{r}
@@ -209,12 +215,15 @@ We can now save the moments of maximum and minimum (estimated) load of the teach
 interesting <- totaldata[totaldata$Load>=max(totaldata$Load) | totaldata$Load<=min(totaldata$Load),c("time","Load")]
 dataToLook <- as.data.frame(interesting)
 names(dataToLook)[[1]] <- "Time.ms"
-dataToLook$Time.min <- msToMinSec(interesting$Time.ms)
+dataToLook$Time.min <- msToMinSec(dataToLook$Time.ms)
 dataToLook$Session <- session
 
 write.csv(dataToLook, file=paste("./cleandata/InterestingEpisodes.",session,".window",window,"s.slide",slide,"s.csv",sep=""))
 ```
 
+A first visual inspection (not rigorous video coding) of the moments of high (Load=4) and low load (Load=0), turns the following result:
+
+**High load** episodes correspond to moments...
 
 Analysis for T3S1 (Roland)
 ------------------------------------------------
@@ -228,7 +237,7 @@ load(paste("./cleandata/",session,".CognitiveLoadMetrics.rda",sep=""))
 
 # We eliminate non-complete intervals (the end of the fixation and saccade data appears to be missing)
 totaldata <- totaldata[complete.cases(totaldata),]
-#**TODO: check why???**
+#TODO: check why???**
 
 
 p1 <- ggplot(totaldata, aes(x=time, y=value.Mean)) + 
@@ -264,6 +273,11 @@ print(p5)
 
 ```
 
+We can draw a simple histogram of the load, to get an idea of its distribution:
+
+```{r}
+qplot(totaldata$Load, binwidth=1)
+```
 
 We can see how correlated these four measurements are to each other:
 
@@ -284,7 +298,7 @@ We can now save the moments of maximum and minimum (estimated) load of the teach
 interesting <- totaldata[totaldata$Load>=max(totaldata$Load) | totaldata$Load<=min(totaldata$Load),c("time","Load")]
 dataToLook <- as.data.frame(interesting)
 names(dataToLook)[[1]] <- "Time.ms"
-dataToLook$Time.min <- msToMinSec(interesting$Time.ms)
+dataToLook$Time.min <- msToMinSec(dataToLook$Time.ms)
 dataToLook$Session <- session
 
 write.csv(dataToLook, file=paste("./cleandata/InterestingEpisodes.",session,".window",window,"s.slide",slide,"s.csv",sep=""))
