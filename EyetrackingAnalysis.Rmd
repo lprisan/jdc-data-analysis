@@ -34,8 +34,8 @@ The main input for the following analyses is the raw event data from the recordi
 window <- 10
 slide <- 5
 
-# (in Mirko's original labeling, Pierre02 corresponds to T2S1, Roland03 is T3S1)
-sessions <- c("T2S1","T3S1")
+# (in Mirko's original labeling, Pierre02 corresponds to T2S1, Roland03 is T3S1, JdCSession2 is T1S1)
+sessions <- c("T1S1","T2S1","T3S1")
 for (session in sessions){
     
     # We check whether the clean data is already in place - if so, we skip this pre-processing
@@ -61,7 +61,12 @@ for (session in sessions){
         filedata <- read.csv(filename,comment.char="#")
         
         # we select the meaningful columns (for now, only fixation start, duration, end in ms)
-        filedata <- filedata[c(7,8,9)] # TODO: In the JdC files, it is 8,9,10!!
+        # it is different in the exports we have for different teachers!
+        if(substr(session,1,2)!="T1"){
+            filedata <- filedata[,c(7,8,9)]
+        }else{
+            filedata <- filedata[,c(8,9,10)]
+        }
         filedata$Session <- session
         fixdata <- data.frame(filedata)
     
@@ -75,7 +80,12 @@ for (session in sessions){
         filedata <- read.csv(filename,comment.char="#")
         
         # we select the meaningful columns (for now, only saccade start, duration, end in ms and amplitude in degrees)
-        filedata <- filedata[c(7,8,9,14)] # TODO: In the JdC files, it is 8,9,10,15!!
+        # it is different in the exports we have for different teachers!
+        if(substr(session,1,2)!="T1"){
+            filedata <- filedata[,c(7,8,9,14)]
+        }else{
+            filedata <- filedata[,c(8,9,10,15)]
+        }        
         filedata$Session <- session
         sacdata <- data.frame(filedata)
         # We add the saccade speed for each saccade
@@ -145,7 +155,114 @@ load(paste("./cleandata/",session,".CognitiveLoadMetrics.rda",sep=""))
 head(totaldata, n=3)
 ```
 
-Analysis for T2S1 (Pierre)
+Analysis for T1S1 (Luis, novice teacher, collaborative situation)
+----------------------------------------------------
+
+We can inspect the different eyetracking parameters during this session, as well as our estimation of cognitive load of the teacher, calculated as **how many of these metrics surpass the median of the session**:
+
+```{r, message=FALSE, echo=FALSE, fig.height=2, fig.width=8}
+require(ggplot2)
+session <- "T1S1"
+load(paste("./cleandata/",session,".CognitiveLoadMetrics.rda",sep=""))
+
+p1 <- ggplot(totaldata, aes(x=time, y=value.Mean)) + 
+  ggtitle(paste("Pupil diameter MEAN over ",window,"s",sep="")) + 
+  geom_line() + geom_hline(yintercept=meanPDmedian) +
+  theme(axis.text.x = element_blank(),plot.title=element_text(size=20),axis.title=element_text(size=18))
+print(p1)
+
+p2 <- ggplot(totaldata, aes(x=time, y=value.SD)) + 
+  ggtitle(paste("Pupil diameter SD over ",window,"s",sep="")) + 
+  geom_line() + geom_hline(yintercept=sdPDmedian) +
+  theme(axis.text.x = element_blank(),plot.title=element_text(size=20),axis.title=element_text(size=18))
+print(p2)
+
+p3 <- ggplot(totaldata, aes(x=time, y=value.Fix)) + 
+  ggtitle(paste("Fixations >500ms over ",window,"s",sep="")) + 
+  geom_line() + geom_hline(yintercept=longFixMedian) +
+  theme(axis.text.x = element_blank(),plot.title=element_text(size=20),axis.title=element_text(size=18))
+print(p3)
+
+p4 <- ggplot(totaldata, aes(x=time, y=value.Sac)) + 
+  ggtitle(paste("Saccade speed over ",window,"s",sep="")) + 
+  geom_line() + geom_hline(yintercept=sacSpMedian) +
+  theme(axis.text.x = element_blank(),plot.title=element_text(size=20),axis.title=element_text(size=18))
+print(p4)
+
+p5 <- ggplot(totaldata, aes(x=time, y=Load, col=Load)) + 
+  ggtitle(paste("Load Index\n(estimation of cognitive overload over ",window,"s)",sep="")) + 
+  geom_line(size=1) +
+  theme(axis.text.x = element_blank(),plot.title=element_text(size=20, face="bold"),axis.title=element_text(size=18),panel.background = element_rect(fill = 'white')) +
+  scale_color_gradient(low="green",high="red")
+print(p5)
+
+```
+
+We can draw a simple histogram of the load, to get an idea of its distribution:
+
+```{r}
+qplot(totaldata$Load, binwidth=1)
+```
+
+In this case, the distribution is less normal-looking, with bigger tails than in the following cases, and the proportion of high-load moments is higher than in the other ones (which may evidence the fact that it was a very novel situation for the teacher).
+
+We can see how correlated these four measurements are to each other:
+
+```{r}
+#library(corrgram)
+
+cor(totaldata[,c("above.Mean","above.SD","above.Fix","above.Sac")])
+
+#corrgram(totaldata[,c("above.Mean","above.SD","above.Fix","above.Sac")], order=F, lower.panel=panel.shade,
+#  upper.panel=panel.pie, text.panel=panel.txt,
+#  main="Cognitive load metrics")
+```
+
+The correlations are very far from perfect, but they are much higher and more positive than the other examples we will see later.
+
+We can now save the moments of maximum and minimum (estimated) load of the teacher, for later (manual) video coding. In our case, we already have the video coding data from a previous analysis iteration.............................
+
+```{r}
+interesting <- totaldata[totaldata$Load>=max(totaldata$Load) | totaldata$Load<=min(totaldata$Load),c("time","Load")]
+dataToLook <- as.data.frame(interesting)
+names(dataToLook)[[1]] <- "Time.ms"
+dataToLook$Time.min <- msToMinSec(dataToLook$Time.ms)
+dataToLook$Session <- session
+
+write.csv(dataToLook, file=paste("./cleandata/InterestingEpisodes.",session,".window",window,"s.slide",slide,"s.csv",sep=""))
+
+# We load the two video coding data files, and extract/merge the interesting episodes from it
+videocode <- read.csv("./cleandata/VideoCoding.T1S1.T1S2.T1S3.Load0.csv")
+videocode <- rbind(videocode,read.csv("./cleandata/VideoCoding.T1S1.T1S2.T1S3.Load3.csv"))
+videocode <- videocode[videocode$Session==2,]
+
+dataToLook <- merge(dataToLook,videocode,by="Time.ms")
+
+# We now do some tables with the video coded occurrences, and calculate some basic chi-squared tests of independence
+dataToLook$Load <- as.factor(dataToLook$Load.x)
+
+print(tabAct <- table(dataToLook$Load,dataToLook$Activity))
+print(chisq.test(tabAct))
+
+print(tabSoc <- table(dataToLook$Load,dataToLook$Social))
+print(chisq.test(tabSoc))
+
+# We refactor the Focus factor, as there are factors that do not appear
+dataToLook$Focus <- factor(dataToLook$Focus)
+print(tabFoc <- table(dataToLook$Load,dataToLook$Focus))
+print(chisq.test(tabFoc))
+
+print(tabCha <- table(dataToLook$Load,dataToLook$Changing.visual.field.a.lot))
+print(chisq.test(tabCha))
+```
+
+As we can see, in this case the **load seems to be clearly related to the focus, social plane and changes in visual field**. The relationship with the kind of activity being done by the teacher is not statistically significant. High load episodes seem to happen more often in the classroom social plane, while looking at the faces or backs of students, or at the manipulative (teacher) desk. Low load episodes happen exclusively at the group social plane, while looking at the tabletop without great changes in visual field.
+
+
+
+
+
+Analysis for T2S1 (Pierre, expert teacher, lecture)
 ------------------------------------------------
 
 We can inspect the different eyetracking parameters during this session, as well as our estimation of cognitive load of the teacher, calculated as **how many of these metrics surpass the median of the session**:
@@ -221,11 +338,9 @@ dataToLook$Session <- session
 write.csv(dataToLook, file=paste("./cleandata/InterestingEpisodes.",session,".window",window,"s.slide",slide,"s.csv",sep=""))
 ```
 
-A first visual inspection (not rigorous video coding) of the moments of high (Load=4) and low load (Load=0), turns the following result:
+An initial inspection (descriptive narration) of the highest (Load=4) and lowest (Load=0) load moments indicates that the high load moments (very scarce) include the eyetracker calibration and preparation to start, some quick question/answer exchanges with students, pauses while preparing what to say in the next stretch of talk, but also some episodes of just talking and scanning the audience. Low load episodes include parts of talking and scanning the audience, but there is a high proportion of moments of looking/reading at the laptop slides sustainedly.
 
-**High load** episodes correspond to moments...
-
-Analysis for T3S1 (Roland)
+Analysis for T3S1 (Roland, expert teacher, lecture with clickers interruptions)
 ------------------------------------------------
 
 We can inspect the different eyetracking parameters during this session, as well as our estimation of cognitive load of the teacher, calculated as **how many of these metrics surpass the median of the session**:
@@ -304,6 +419,7 @@ dataToLook$Session <- session
 write.csv(dataToLook, file=paste("./cleandata/InterestingEpisodes.",session,".window",window,"s.slide",slide,"s.csv",sep=""))
 ```
 
+An initial inspection (descriptive narration) of the highest and lowest load moments indicates that **there is not a clear trend** in their nature. High load moments often seem to involve the teacher moving his head a lot (from projection to audience and viceversa), quick question-answer exchanges, or losing the train of thought, or unexpected occurrences like a student arriving late. Low load moments include the teacher talking and scanning the audience (but these are also sometimes in the high load set), pauses waiting for other people to respond or explain things, sp. during the initial setup of the lecture and some pauses that were not about the lecture itself (Mirko's experiments on attention).
 
 References
 --------------------------------
