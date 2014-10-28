@@ -13,7 +13,8 @@ loadRawDELANAData <- function(){
     # List of available sessions (the data file names start with this)
     sessions <- c("20141021_Patrick_Session1",
                   "20141021_Patrick_Session2",
-                  "20141021_Kshitij_Session3")
+                  "20141021_Kshitij_Session3",
+                  "20141028_Kshitij_Session4")
     
     rawdir <- "20141021-rawdata"
     
@@ -59,7 +60,8 @@ doLoadAnalyses <- function(window=10,slide=5){
     # List of available sessions (the data file names start with this)
     sessions <- c("20141021_Patrick_Session1",
                   "20141021_Patrick_Session2",
-                  "20141021_Kshitij_Session3")
+                  "20141021_Kshitij_Session3",
+                  "20141028_Kshitij_Session4")
     
     rawdir <- "20141021-rawdata"
     cleandir <- "20141021-cleandata"
@@ -119,7 +121,8 @@ extractExtremeLoadMoments <- function(){
 
     sessions <- c("20141021_Patrick_Session1",
                   "20141021_Patrick_Session2",
-                  "20141021_Kshitij_Session3")
+                  "20141021_Kshitij_Session3",
+                  "20141028_Kshitij_Session4")
     
     cleandir <- "20141021-cleandata"
 
@@ -164,7 +167,8 @@ plotLoadGraphs <- function(){
     # List of available sessions (the data file names start with this)
     sessions <- c("20141021_Patrick_Session1",
                   "20141021_Patrick_Session2",
-                  "20141021_Kshitij_Session3")
+                  "20141021_Kshitij_Session3",
+                  "20141028_Kshitij_Session4")
     
     rawdir <- "20141021-rawdata"
     cleandir <- "20141021-cleandata"
