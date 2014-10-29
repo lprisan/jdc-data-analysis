@@ -22,7 +22,9 @@ preprocessISLLogs <- function(rootDir=".",doYAMLConversion=FALSE){
       dirs <- c("20141014_Logs_Cond1_Group2_Group4_Group6",
                 "20141014_Logs_Cond2_Group1_Group3_Group5",
                 "20141017_Logs_Cond1_Group2_Group4",
-                "20141017_Logs_Cond2_Group1_Group3_Group5")
+                "20141017_Logs_Cond2_Group1_Group3_Group5",
+                "20141028_Logs_Cond1_Group2_Group4_Group6",
+                "20141028_Logs_Cond2_Group1_Group3_Group5")
     
       for(dir in dirs){
           convertLogsToJson(paste(rootDir, dir, sep="/"))      
@@ -33,37 +35,40 @@ preprocessISLLogs <- function(rootDir=".",doYAMLConversion=FALSE){
   # We import the groups, start and end times from a csv in the rootDir
   syncData <- read.csv(paste(rootDir,"Video-Log synchronization.csv", sep="/"), stringsAsFactors=FALSE)
   
-  syncData$GroupLabel = paste(syncData$Class,".G",syncData$Group,sep="")
+  syncData$GroupLabel = paste(syncData$Class,".G",syncData$Group,".W",syncData$Week,sep="")
   
   options(digits.secs = 3)
   
   # for each group, we get and clean the data
   for(i in 1:length(syncData$GroupLabel)){
     
-    # We calculate the time limits (for now, based on the expected time slots)
-    start <- as.POSIXct(strptime(syncData$Timestamp.start[i], "%m/%d/%Y %H:%M:%OS"))
-    end <- as.POSIXct(strptime(syncData$Timestamp.end[i], "%m/%d/%Y %H:%M:%OS"))
-    # Old code
-    # mergeSplitLogFiles(paste(rootDir, paste("lamp ",as.character(syncData$Lamp..[i]),sep=""), sep="/"),start,end,syncData$Code[i])
-    # We find the corresponding folder for this group's logs
-    year<- strftime(start,format="%Y")
-    month<-strftime(start,format="%m")
-    day<-strftime(start,format="%d")
-    condition<-syncData$Condition[i]
-    ymd <- paste(year,month,day,sep="")
-    pat<-paste(ymd,".*Cond",condition,".*",sep="") # A_B.*_C.*\\.csv
-    dir = paste("./",(list.files(pattern=pat))[1],sep="")
-    groupData <- mergeSplitLogFiles2(dir,start,end,syncData$GroupLabel[i])
-    if(nrow(groupData)!=0){
-        # We add the Condition, Group, Week, Class, Label
-        groupData$Condition <- rep(condition,nrow(groupData))
-        groupData$Class <- rep(syncData$Class[i],nrow(groupData))
-        groupData$Week <- rep(syncData$Week[i],nrow(groupData))
-        groupData$Group <- rep(syncData$GroupLabel[i],nrow(groupData))
-        
-        # We write the data to a rda file
-        save(groupData,file=paste(syncData$GroupLabel[i],".rda",sep=""),compress=TRUE)
+    if(!file.exists(paste(syncData$GroupLabel[i],".rda",sep=""))){# If the clean rda file for this group does not exist, we preprocess the data to create it
+        # We calculate the time limits (for now, based on the expected time slots)
+        start <- as.POSIXct(strptime(syncData$Timestamp.start[i], "%m/%d/%Y %H:%M:%OS"))
+        end <- as.POSIXct(strptime(syncData$Timestamp.end[i], "%m/%d/%Y %H:%M:%OS"))
+        # Old code
+        # mergeSplitLogFiles(paste(rootDir, paste("lamp ",as.character(syncData$Lamp..[i]),sep=""), sep="/"),start,end,syncData$Code[i])
+        # We find the corresponding folder for this group's logs
+        year<- strftime(start,format="%Y")
+        month<-strftime(start,format="%m")
+        day<-strftime(start,format="%d")
+        condition<-syncData$Condition[i]
+        ymd <- paste(year,month,day,sep="")
+        pat<-paste(ymd,".*Cond",condition,".*",sep="") # A_B.*_C.*\\.csv
+        dir = paste("./",(list.files(pattern=pat))[1],sep="")
+        groupData <- mergeSplitLogFiles2(dir,start,end,syncData$GroupLabel[i])
+        if(nrow(groupData)!=0){
+            # We add the Condition, Group, Week, Class, Label
+            groupData$Condition <- rep(condition,nrow(groupData))
+            groupData$Class <- rep(syncData$Class[i],nrow(groupData))
+            groupData$Week <- rep(syncData$Week[i],nrow(groupData))
+            groupData$Group <- rep(syncData$GroupLabel[i],nrow(groupData))
+            
+            # We write the data to a rda file
+            save(groupData,file=paste(syncData$GroupLabel[i],".rda",sep=""),compress=TRUE)
+        }
     }
+      
   }
   
   # TODO: maybe join all data files into a big file?
@@ -88,8 +93,10 @@ convertLogsToJson <- function(rootDir){
   logFiles <- list.files(pattern = "\\.yaml$")
   
   for(logFile in logFiles){
-    cat(paste("Converting ",logFile,"..."))
-    convertLogToJson(logFile)
+      if(!file.exists(paste(logFile,".json",sep=""))){#If the json converted file does not already exist, we process it
+          cat(paste("Converting ",logFile,"..."))
+          convertLogToJson(logFile)
+      }
   }
   
   cat("Conversion to json finished!")
@@ -118,6 +125,7 @@ convertLogToJson <- function(inputFile){
     newstr <- gsub("id","\"id\"", x=newstr)
     newstr <- gsub("corners","\"corners\"", x=newstr)
     newstr <- gsub("game","\"game\"", x=newstr)
+    newstr <- gsub("-nan","-1",x=newstr)
     
     # HintType=-1; Map=4; Proportion1=0.5; Proportion2=0.5; Proportion3=0.6; Proportion4=0.2; 
     # BugPositionX=5; BugPositionY=7; Steps=0; StepsToGo=5; GameStarted=1; MapFinished=0; MapNew=0; 
@@ -636,18 +644,46 @@ mergeSplitLogFiles2 <- function(directory, startTime, endTime, label){
         
         # we create the target dataframe, or append to it if it already has data
         newData <- data.frame(timestamp = validEntries$timestamp)
+
+        # We get the game variables
+        game <- validEntries$game
         
-        # We iterate throughout the log entries
-        for(i in 1:length(newData$timestamp)){
+        # The game object looks like: 
+        # HintType=-1; Map=4; Proportion1=0.5; Proportion2=0.5; Proportion3=0.6; Proportion4=0.2; 
+        # BugPositionX=5; BugPositionY=7; Steps=0; StepsToGo=5; GameStarted=1; MapFinished=0; MapNew=0; 
+        # Proportion1Num=5; Proportion2Num=1; Proportion3Num=3; Proportion4Num=2; Proportion1Den=10; 
+        # Proportion2Den=2; Proportion3Den=5; Proportion4Den=10; WrongMove=0; P1Greater=0; P2Greater=0; P3Greater=0; P4Greater=0
+        
+        #Just in case the game data is invalid
+        if(is.null(game) || ncol(game)==0 || nrow(game)!=length(newData$timestamp)){
+            newData$HintType <- NA
+            newData$Map <- NA
+            newData$Proportion1 <- NA
+            newData$Proportion2 <- NA
+            newData$Proportion3 <- NA
+            newData$Proportion4 <- NA
+            newData$BugPositionX <- NA
+            newData$BugPositionY <- NA
+            newData$Steps <- NA
+            newData$StepsToGo <- NA
+            newData$GameStarted <- NA
+            newData$MapFinished <- NA
+            newData$MapNew <- NA
+            newData$Proportion1Num <- NA
+            newData$Proportion2Num <- NA
+            newData$Proportion3Num <- NA
+            newData$Proportion4Num <- NA
+            newData$Proportion1Den <- NA
+            newData$Proportion2Den <- NA
+            newData$Proportion3Den <- NA
+            newData$Proportion4Den <- NA
+            newData$WrongMove <- NA
+            newData$P1Greater <- NA
+            newData$P2Greater <- NA
+            newData$P3Greater <- NA
+            newData$P4Greater <- NA
             
-            # We get the game variables
-            game <- validEntries$game
-            
-            # The game object looks like: 
-            # HintType=-1; Map=4; Proportion1=0.5; Proportion2=0.5; Proportion3=0.6; Proportion4=0.2; 
-            # BugPositionX=5; BugPositionY=7; Steps=0; StepsToGo=5; GameStarted=1; MapFinished=0; MapNew=0; 
-            # Proportion1Num=5; Proportion2Num=1; Proportion3Num=3; Proportion4Num=2; Proportion1Den=10; 
-            # Proportion2Den=2; Proportion3Den=5; Proportion4Den=10; WrongMove=0; P1Greater=0; P2Greater=0; P3Greater=0; P4Greater=0
+        }else{
             newData$HintType <- game$HintType
             newData$Map <- game$Map
             newData$Proportion1 <- game$Proportion1
@@ -675,8 +711,15 @@ mergeSplitLogFiles2 <- function(directory, startTime, endTime, label){
             newData$P3Greater <- game$P3Greater
             newData$P4Greater <- game$P4Greater
             
-                
-                
+        }
+        
+        
+        
+        
+        
+        # We iterate throughout the log entries
+        for(i in 1:length(newData$timestamp)){
+            
             
             
             # We get the list of tags detected
@@ -793,11 +836,14 @@ mergeSplitLogFiles2 <- function(directory, startTime, endTime, label){
             newData$Position.CircularHintx[[i]] <- (getPositionTagGroup(tags,340))[[1]] # Circular hint card
             newData$Position.RectangularHintx[[i]] <- (getPositionTagGroup(tags,339))[[1]] # Rectangular hint card
             newData$Position.DecimalHintx[[i]] <- (getPositionTagGroup(tags,338))[[1]] # Decimal hint card
+            newData$Position.VaryingHintx[[i]] <- (getPositionTagGroup(tags,430))[[1]] # Varying hint card
+            
             newData$Position.DiscreteHinty[[i]] <- (getPositionTagGroup(tags,336))[[2]] # Discrete hint card
             newData$Position.FractionHinty[[i]] <- (getPositionTagGroup(tags,337))[[2]] # Fraction hint card
             newData$Position.CircularHinty[[i]] <- (getPositionTagGroup(tags,340))[[2]] # Circular hint card
             newData$Position.RectangularHinty[[i]] <- (getPositionTagGroup(tags,339))[[2]] # Rectangular hint card
             newData$Position.DecimalHinty[[i]] <- (getPositionTagGroup(tags,338))[[2]] # Decimal hint card
+            newData$Position.VaryingHinty[[i]] <- (getPositionTagGroup(tags,430))[[2]] # Varying hint card
             
             newData$Position.Carte1x[[i]] <- (getPositionTagGroup(tags,409))[[1]] # Carte 1 card
             newData$Position.Carte2x[[i]] <- (getPositionTagGroup(tags,410))[[1]] # Carte 2 card
@@ -876,6 +922,7 @@ mergeSplitLogFiles2 <- function(directory, startTime, endTime, label){
             newData$Rotation.CircularHint[[i]] <- getRotationTagGroup(tags,340) # Circular hint card
             newData$Rotation.RectangularHint[[i]] <- getRotationTagGroup(tags,339) # Rectangular hint card
             newData$Rotation.DecimalHint[[i]] <- getRotationTagGroup(tags,338) # Decimal hint card
+            newData$Rotation.VaryingHint[[i]] <- getRotationTagGroup(tags,430) # Varying hint card
             
             newData$Rotation.Carte1[[i]] <- getRotationTagGroup(tags,409) # Carte 1 card
             newData$Rotation.Carte2[[i]] <- getRotationTagGroup(tags,410) # Carte 2 card
@@ -1017,6 +1064,7 @@ mergeSplitLogFiles2 <- function(directory, startTime, endTime, label){
             newData$CircularHint[[i]] <- getQuadrantTagGroup(tags,displayWidth,displayHeight,340) # Circular hint card
             newData$RectangularHint[[i]] <- getQuadrantTagGroup(tags,displayWidth,displayHeight,339) # Rectangular hint card
             newData$DecimalHint[[i]] <- getQuadrantTagGroup(tags,displayWidth,displayHeight,338) # Decimal hint card
+            newData$VaryingHint[[i]] <- getQuadrantTagGroup(tags,displayWidth,displayHeight,430) # Varying hint card
             
             newData$Carte1[[i]] <- getQuadrantTagGroup(tags,displayWidth,displayHeight,409) # Carte 1 card
             newData$Carte2[[i]] <- getQuadrantTagGroup(tags,displayWidth,displayHeight,410) # Carte 2 card
@@ -1726,11 +1774,14 @@ preprocessJDCLogsAlternative <- function(rootDir,doYAMLConversion=FALSE){
           newData$Position.CircularHintx[[i]] <- (getPositionTagGroup(tags,340))[[1]] # Circular hint card
           newData$Position.RectangularHintx[[i]] <- (getPositionTagGroup(tags,339))[[1]] # Rectangular hint card
           newData$Position.DecimalHintx[[i]] <- (getPositionTagGroup(tags,338))[[1]] # Decimal hint card
+          newData$Position.VaryingHintx[[i]] <- (getPositionTagGroup(tags,430))[[1]] # Varying hint card
+
           newData$Position.DiscreteHinty[[i]] <- (getPositionTagGroup(tags,336))[[2]] # Discrete hint card
           newData$Position.FractionHinty[[i]] <- (getPositionTagGroup(tags,337))[[2]] # Fraction hint card
           newData$Position.CircularHinty[[i]] <- (getPositionTagGroup(tags,340))[[2]] # Circular hint card
           newData$Position.RectangularHinty[[i]] <- (getPositionTagGroup(tags,339))[[2]] # Rectangular hint card
           newData$Position.DecimalHinty[[i]] <- (getPositionTagGroup(tags,338))[[2]] # Decimal hint card
+          newData$Position.VaryingHinty[[i]] <- (getPositionTagGroup(tags,430))[[2]] # Varying hint card
           
           newData$Position.Carte1x[[i]] <- (getPositionTagGroup(tags,409))[[1]] # Carte 1 card
           newData$Position.Carte2x[[i]] <- (getPositionTagGroup(tags,410))[[1]] # Carte 2 card
@@ -1808,6 +1859,7 @@ preprocessJDCLogsAlternative <- function(rootDir,doYAMLConversion=FALSE){
           newData$Rotation.CircularHint[[i]] <- getRotationTagGroup(tags,340) # Circular hint card
           newData$Rotation.RectangularHint[[i]] <- getRotationTagGroup(tags,339) # Rectangular hint card
           newData$Rotation.DecimalHint[[i]] <- getRotationTagGroup(tags,338) # Decimal hint card
+          newData$Rotation.VaryingHint[[i]] <- getRotationTagGroup(tags,430) # Varying hint card
           
           newData$Rotation.Carte1[[i]] <- getRotationTagGroup(tags,409) # Carte 1 card
           newData$Rotation.Carte2[[i]] <- getRotationTagGroup(tags,410) # Carte 2 card
@@ -1948,6 +2000,7 @@ preprocessJDCLogsAlternative <- function(rootDir,doYAMLConversion=FALSE){
           newData$CircularHint[[i]] <- getQuadrantTagGroup(tags,displayWidth,displayHeight,340) # Circular hint card
           newData$RectangularHint[[i]] <- getQuadrantTagGroup(tags,displayWidth,displayHeight,339) # Rectangular hint card
           newData$DecimalHint[[i]] <- getQuadrantTagGroup(tags,displayWidth,displayHeight,338) # Decimal hint card
+          newData$VaryingHint[[i]] <- getQuadrantTagGroup(tags,displayWidth,displayHeight,430) # Varying hint card
           
           newData$Carte1[[i]] <- getQuadrantTagGroup(tags,displayWidth,displayHeight,409) # Carte 1 card
           newData$Carte2[[i]] <- getQuadrantTagGroup(tags,displayWidth,displayHeight,410) # Carte 2 card
