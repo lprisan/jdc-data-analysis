@@ -233,3 +233,119 @@ plotLoadGraphs <- function(){
     
 }
 
+doVideoCodingAnalysis <- function(){
+    
+    cleandir <- "20141021-cleandata"
+
+    # Load and merge load and coding data
+    videocodes <- read.csv("VideoCoding.csv")
+    
+    loaddata <- data.frame()
+    
+    for(session in levels(videocodes$Session)){
+        
+        load <- get(load(paste("./",cleandir,"/",session,"-LoadMetrics.Rda",sep="")))
+
+        if(nrow(loaddata)==0) loaddata <- load
+        else loaddata <- rbind(loaddata,load)
+    }
+    
+    totaldata <- merge(loaddata,videocodes,by=c("Session","time"),all=T)
+
+    # We remove non-coded or otherwise incomplete moments
+    totaldata <- totaldata[complete.cases(totaldata),]
+    
+    # We merge individual and group social planes, as they are largely equivalent in the context of these sessions
+    levels(totaldata$Social.Plane) = c("CLS","GRPIND","GRPIND")
+
+    # Overall analysis
+    print(paste("Analyzing overall data ====================================================\n"))
+    
+    # We now do some tables with the video coded occurrences, and calculate some basic chi-squared tests of independence
+    totaldata$Load <- as.factor(totaldata$Load)
+    
+    # We eliminate levels not used
+    totaldata$Activity <- factor(totaldata$Activity)
+    print(tabAct <- table(totaldata$Load,totaldata$Activity))
+    print(chisq.test(tabAct))
+    
+    # We eliminate levels not used
+    totaldata$Social.Plane <- factor(totaldata$Social.Plane)
+    print(tabSoc <- table(totaldata$Load,totaldata$Social.Plane))
+    print(chisq.test(tabSoc))
+    
+    # We eliminate levels not used
+    totaldata$Focus <- factor(totaldata$Focus)
+    print(tabFoc <- table(totaldata$Load,totaldata$Focus))
+    print(chisq.test(tabFoc))
+    
+    # We eliminate levels not used
+    totaldata$Large.Head.Movement <- factor(totaldata$Large.Head.Movement)
+    print(tabCha <- table(totaldata$Load,totaldata$Large.Head.Movement))
+    print(chisq.test(tabCha))
+    
+    
+    # Analyze participant-wise
+    participants <- c("Kshitij","Patrick")
+    for(participant in participants){
+        print(paste("Analyzing video coding for participant",participant,"==========================================\n"))
+        
+        partdata <- totaldata[grepl(participant,totaldata$Session),]
+        
+        # We now do some tables with the video coded occurrences, and calculate some basic chi-squared tests of independence
+        partdata$Load <- as.factor(partdata$Load)
+        
+        # We eliminate levels not used in this session
+        partdata$Activity <- factor(partdata$Activity)
+        print(tabAct <- table(partdata$Load,partdata$Activity))
+        print(chisq.test(tabAct))
+        
+        # We eliminate levels not used in this session
+        partdata$Social.Plane <- factor(partdata$Social.Plane)
+        print(tabSoc <- table(partdata$Load,partdata$Social.Plane))
+        print(chisq.test(tabSoc))
+        
+        # We eliminate levels not used in this session
+        partdata$Focus <- factor(partdata$Focus)
+        print(tabFoc <- table(partdata$Load,partdata$Focus))
+        print(chisq.test(tabFoc))
+        
+        print(tabCha <- table(partdata$Load,partdata$Large.Head.Movement))
+        print(chisq.test(tabCha))
+        
+        
+    }
+    
+    # Analyze session-wise
+    for(session in levels(as.factor(totaldata$Session))){
+        
+        print(paste("Analyzing video coding for session",session,"==========================================\n"))
+        
+        sessiondata <- totaldata[totaldata$Session == session,]
+        
+        # We now do some tables with the video coded occurrences, and calculate some basic chi-squared tests of independence
+        sessiondata$Load <- as.factor(sessiondata$Load)
+        
+        # We eliminate levels not used in this session
+        sessiondata$Activity <- factor(sessiondata$Activity)
+        print(tabAct <- table(sessiondata$Load,sessiondata$Activity))
+        print(chisq.test(tabAct))
+        
+        # We eliminate levels not used in this session
+        sessiondata$Social.Plane <- factor(sessiondata$Social.Plane)
+        print(tabSoc <- table(sessiondata$Load,sessiondata$Social.Plane))
+        print(chisq.test(tabSoc))
+        
+        # We eliminate levels not used in this session
+        sessiondata$Focus <- factor(sessiondata$Focus)
+        print(tabFoc <- table(sessiondata$Load,sessiondata$Focus))
+        print(chisq.test(tabFoc))
+        
+        print(tabCha <- table(sessiondata$Load,sessiondata$Large.Head.Movement))
+        print(chisq.test(tabCha))
+        
+        
+    }
+    
+    totaldata
+}
