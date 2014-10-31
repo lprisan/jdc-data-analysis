@@ -24,7 +24,9 @@ preprocessISLLogs <- function(rootDir=".",doYAMLConversion=FALSE){
                 "20141017_Logs_Cond1_Group2_Group4",
                 "20141017_Logs_Cond2_Group1_Group3_Group5",
                 "20141028_Logs_Cond1_Group2_Group4_Group6",
-                "20141028_Logs_Cond2_Group1_Group3_Group5")
+                "20141028_Logs_Cond2_Group1_Group3_Group5",
+                "20141031_Logs_Cond1_Group2_Group4_Group6",
+                "20141031_Logs_Cond2_Group1_Group3_Group5")
     
       for(dir in dirs){
           convertLogsToJson(paste(rootDir, dir, sep="/"))      
