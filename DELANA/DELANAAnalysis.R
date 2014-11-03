@@ -2,7 +2,7 @@ require("ff")
 require("ggplot2")
 require("car")
 
-setwd("/home/lprisan/workspace/jdc-data-analysis-eyetrack/DELANA")
+setwd("/home/lprisan/workspace/jdc-data-analysis/DELANA")
 source("rollingWindows.R")
 #setwd("/data/tmpData")
 
@@ -268,16 +268,19 @@ doVideoCodingAnalysis <- function(){
     totaldata$Activity <- factor(totaldata$Activity)
     print(tabAct <- table(totaldata$Load,totaldata$Activity))
     print(chisq.test(tabAct))
+    print(chisq.test(tabAct)$residuals)
     
     # We eliminate levels not used
     totaldata$Social.Plane <- factor(totaldata$Social.Plane)
     print(tabSoc <- table(totaldata$Load,totaldata$Social.Plane))
     print(chisq.test(tabSoc))
+    print(chisq.test(tabSoc)$residuals)
     
     # We eliminate levels not used
     totaldata$Focus <- factor(totaldata$Focus)
     print(tabFoc <- table(totaldata$Load,totaldata$Focus))
     print(chisq.test(tabFoc))
+    print(chisq.test(tabFoc)$residuals)
     
     # We eliminate levels not used
     totaldata$Large.Head.Movement <- factor(totaldata$Large.Head.Movement)
@@ -299,16 +302,19 @@ doVideoCodingAnalysis <- function(){
         partdata$Activity <- factor(partdata$Activity)
         print(tabAct <- table(partdata$Load,partdata$Activity))
         print(chisq.test(tabAct))
+        print(chisq.test(tabAct)$residuals)
         
         # We eliminate levels not used in this session
         partdata$Social.Plane <- factor(partdata$Social.Plane)
         print(tabSoc <- table(partdata$Load,partdata$Social.Plane))
         print(chisq.test(tabSoc))
+        print(chisq.test(tabSoc)$residuals)
         
         # We eliminate levels not used in this session
         partdata$Focus <- factor(partdata$Focus)
         print(tabFoc <- table(partdata$Load,partdata$Focus))
         print(chisq.test(tabFoc))
+        print(chisq.test(tabFoc)$residuals)
         
         print(tabCha <- table(partdata$Load,partdata$Large.Head.Movement))
         print(chisq.test(tabCha))
@@ -330,16 +336,17 @@ doVideoCodingAnalysis <- function(){
         sessiondata$Activity <- factor(sessiondata$Activity)
         print(tabAct <- table(sessiondata$Load,sessiondata$Activity))
         print(chisq.test(tabAct))
-        
+        print(chisq.test(tabAct)$residuals)
         # We eliminate levels not used in this session
         sessiondata$Social.Plane <- factor(sessiondata$Social.Plane)
         print(tabSoc <- table(sessiondata$Load,sessiondata$Social.Plane))
         print(chisq.test(tabSoc))
-        
+        print(chisq.test(tabSoc)$residuals)
         # We eliminate levels not used in this session
         sessiondata$Focus <- factor(sessiondata$Focus)
         print(tabFoc <- table(sessiondata$Load,sessiondata$Focus))
         print(chisq.test(tabFoc))
+        print(chisq.test(tabFoc)$residuals)
         
         print(tabCha <- table(sessiondata$Load,sessiondata$Large.Head.Movement))
         print(chisq.test(tabCha))

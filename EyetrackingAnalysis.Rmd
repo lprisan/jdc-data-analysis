@@ -340,6 +340,8 @@ write.csv(dataToLook, file=paste("./cleandata/InterestingEpisodes.",session,".wi
 
 An initial inspection (descriptive narration) of the highest (Load=4) and lowest (Load=0) load moments indicates that the high load moments (very scarce) include the eyetracker calibration and preparation to start, some quick question/answer exchanges with students, pauses while preparing what to say in the next stretch of talk, but also some episodes of just talking and scanning the audience. Low load episodes include parts of talking and scanning the audience, but there is a high proportion of moments of looking/reading at the laptop slides sustainedly.
 
+
+
 Analysis for T3S1 (Roland, expert teacher, lecture with clickers interruptions)
 ------------------------------------------------
 
@@ -420,6 +422,136 @@ write.csv(dataToLook, file=paste("./cleandata/InterestingEpisodes.",session,".wi
 ```
 
 An initial inspection (descriptive narration) of the highest and lowest load moments indicates that **there is not a clear trend** in their nature. High load moments often seem to involve the teacher moving his head a lot (from projection to audience and viceversa), quick question-answer exchanges, or losing the train of thought, or unexpected occurrences like a student arriving late. Low load moments include the teacher talking and scanning the audience (but these are also sometimes in the high load set), pauses waiting for other people to respond or explain things, sp. during the initial setup of the lecture and some pauses that were not about the lecture itself (Mirko's experiments on attention).
+
+
+
+Overall analysis of JDC sessions (T1S1, T1S2, T1S3) - for the CSCL paper
+-------------------------------------------
+
+```{r, cache=TRUE, echo=FALSE, message=FALSE}
+# Some basic parameters for the sliding windows (in seconds)
+window <- 10
+slide <- 5
+
+session <- "T1"
+
+    # We load the clean data, just in case we did not the previous steps
+    pupildata <- get(load(paste("./rawdata/",session,".EyetrackerEvents.rda",sep="")))
+    fixdata <- get(load(paste("./rawdata/",session,".EyetrackerFixations.rda",sep="")))
+    sacdata <- get(load(paste("./rawdata/",session,".EyetrackerSaccades.rda",sep="")))
+
+    # We load a few functions that will be useful for the rolling window calculations
+    source("JDCEyetrackingAnalysis.R")
+    
+
+for(oldsession in c("2","3","6")){
+  
+  newsession <- character(1)
+  if(oldsession == "2") newsession <- "T1S1-cscl"
+  if(oldsession == "3") newsession <- "T1S2-cscl"
+  if(oldsession == "6") newsession <- "T1S3-cscl"
+
+  pupilsess <- pupildata[pupildata$Session == oldsession,]
+
+    # We get the rolling window for the mean pupil diameter, and its median value for a median cut
+    meandata <- rollingMean(pupilsess$Time.ms,pupilsess$L.Pupil.Diameter..mm.,window*1000,slide*1000)
+    meanPDmedian <- median(meandata$value)
+    meandata$above <- as.numeric(meandata$value > meanPDmedian)
+    
+    # We get the rolling window for the SD of pupil diameter, and its median value for a median cut
+    sddata <- rollingSd(pupilsess$Time.ms,pupilsess$L.Pupil.Diameter..mm.,window*1000,slide*1000)
+    sdPDmedian <- median(sddata$value)
+    sddata$above <- as.numeric(sddata$value > sdPDmedian)
+
+  fixsess <- fixdata[fixdata$Session == oldsession,]
+  
+    # We get the number of long fixations in the window, and its median
+    longdata <- rollingLong(fixsess$Time.ms,fixsess$Fixation.Duration..ms.,window*1000,slide*1000)
+    longFixMedian <- median(longdata$value)
+    longdata$above <- as.numeric(longdata$value > longFixMedian)
+
+    sacsess <- sacdata[sacdata$Session == oldsession,]
+
+  
+    # We get the saccade speed in the window
+    sacspdata <- rollingMean(sacsess$Time.ms,sacsess$Saccade.Speed,window*1000,slide*1000)
+    sacSpMedian <- median(sacspdata$value)
+    sacspdata$above <- as.numeric(sacspdata$value > sacSpMedian)
+    
+    sessdata <- merge(meandata,sddata,by="time",suffixes = c(".Mean",".SD"),all=T)
+    sessdata <- merge(sessdata,longdata,by="time",all=T)
+    names(sessdata)[[6]] <- paste(names(sessdata)[[6]],"Fix",sep=".")
+    names(sessdata)[[7]] <- paste(names(sessdata)[[7]],"Fix",sep=".")
+    sessdata <- merge(sessdata,sacspdata,by="time",all=T)
+    names(sessdata)[[8]] <- paste(names(sessdata)[[8]],"Sac",sep=".")
+    names(sessdata)[[9]] <- paste(names(sessdata)[[9]],"Sac",sep=".")
+
+    sessdata$Load <- sessdata$above.Mean + sessdata$above.SD + sessdata$above.Fix + sessdata$above.Sac
+
+  sessdata$Session <- newsession
+    # We save all the (clean) window data in a file, for later use
+    save(sessdata,meanPDmedian,sdPDmedian,longFixMedian,sacSpMedian,file=paste("./cleandata/",newsession,".CognitiveLoadMetrics.rda",sep=""))
+    head(sessdata, n=3)
+
+}
+```
+ Y el analisis...
+ 
+```{r, message=FALSE, echo=FALSE, fig.height=2, fig.width=8}
+require(ggplot2)
+sessions <- c("T1S1-cscl","T1S2-cscl","T1S3-cscl")
+
+# We load the two video coding data files, and extract/merge the interesting episodes from it
+videocode <- read.csv("./cleandata/VideoCoding.T1S1.T1S2.T1S3.Load0.csv")
+videocode <- rbind(videocode,read.csv("./cleandata/VideoCoding.T1S1.T1S2.T1S3.Load3.csv"))
+
+for (i in 1:nrow(videocode)){
+  if(videocode$Session[i] == "2") videocode$Session[i] <- "T1S1-cscl"
+  if(videocode$Session[i] == "3") videocode$Session[i] <- "T1S2-cscl"
+  if(videocode$Session[i] == "6") videocode$Session[i] <- "T1S3-cscl"
+}
+
+  videocode <- videocode[,!(names(videocode) %in% c("Load"))]
+
+totaldata <- data.frame()
+
+for (session in sessions){
+  
+  load(paste("./cleandata/",session,".CognitiveLoadMetrics.rda",sep=""))
+
+  sessdata$Time.ms <- sessdata$time
+
+  if(nrow(totaldata)==0) totaldata <- sessdata
+  else totaldata <- rbind(totaldata,sessdata)
+
+  }
+
+videocode <- merge(videocode,totaldata,by=c("Time.ms","Session"),all=T)
+
+videocode <- videocode[videocode$Load==0 | videocode$Load==4,]
+
+# We now do some tables with the video coded occurrences, and calculate some basic chi-squared tests of independence
+videocode$Load <- as.factor(videocode$Load)
+
+videocode$Activity <- factor(videocode$Activity)
+print(tabAct <- table(videocode$Load,videocode$Activity))
+print(chisq.test(tabAct))
+print(chisq.test(tabAct)$residuals)
+
+videocode$Social <- factor(videocode$Social)
+print(tabSoc <- table(videocode$Load,videocode$Social))
+print(chisq.test(tabSoc))
+print(chisq.test(tabSoc)$residuals)
+
+# We refactor the Focus factor, as there are factors that do not appear
+videocode$Focus <- factor(videocode$Focus)
+print(tabFoc <- table(videocode$Load,videocode$Focus))
+print(chisq.test(tabFoc))
+print(chisq.test(tabFoc)$residuals)
+
+
+```
+
 
 References
 --------------------------------
