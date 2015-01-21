@@ -1,6 +1,7 @@
 require("ff")
 require("ggplot2")
 require("car")
+require("gplots")
 
 setwd("/home/lprisan/workspace/jdc-data-analysis-eyetrack/ISL")
 source("rollingWindows.R")
@@ -245,7 +246,7 @@ plotLoadGraphs <- function(){
 
 doVideoCodingAnalysis <- function(){
     
-    cleandir <- "20141021-cleandata"
+    cleandir <- "cleandata"
 
     # Load and merge load and coding data
     videocodes <- read.csv("VideoCoding.csv")
@@ -298,39 +299,6 @@ doVideoCodingAnalysis <- function(){
     print(chisq.test(tabCha))
     
     
-    # Analyze participant-wise
-    participants <- c("Kshitij","Patrick")
-    for(participant in participants){
-        print(paste("Analyzing video coding for participant",participant,"==========================================\n"))
-        
-        partdata <- totaldata[grepl(participant,totaldata$Session),]
-        
-        # We now do some tables with the video coded occurrences, and calculate some basic chi-squared tests of independence
-        partdata$Load <- as.factor(partdata$Load)
-        
-        # We eliminate levels not used in this session
-        partdata$Activity <- factor(partdata$Activity)
-        print(tabAct <- table(partdata$Load,partdata$Activity))
-        print(chisq.test(tabAct))
-        print(chisq.test(tabAct)$residuals)
-        
-        # We eliminate levels not used in this session
-        partdata$Social.Plane <- factor(partdata$Social.Plane)
-        print(tabSoc <- table(partdata$Load,partdata$Social.Plane))
-        print(chisq.test(tabSoc))
-        print(chisq.test(tabSoc)$residuals)
-        
-        # We eliminate levels not used in this session
-        partdata$Focus <- factor(partdata$Focus)
-        print(tabFoc <- table(partdata$Load,partdata$Focus))
-        print(chisq.test(tabFoc))
-        print(chisq.test(tabFoc)$residuals)
-        
-        print(tabCha <- table(partdata$Load,partdata$Large.Head.Movement))
-        print(chisq.test(tabCha))
-        
-        
-    }
     
     # Analyze session-wise
     for(session in levels(as.factor(totaldata$Session))){
@@ -407,6 +375,35 @@ generateExtractVideoSnippets <- function(videoDir = ".",window=10){
     
     setwd(originalDir)
     #print(paste("Check for your extract command in",videoDir))
+}
+
+compareSubjectiveEyetrackingLoad <- function(){
+    
+    graphdir <- "graphs"
+    
+    
+    snippetData <- read.csv("TimesToExtractVideo-ISL.csv",sep=",")
+    subjectiveData <- read.csv("StimulatedRecallData.csv",sep=",")
+    
+    totaldata <- merge(snippetData,subjectiveData,by = c("Snippet"),all=T)
+    
+    ag <- aggregate(Subjective.Value ~ Load, data = totaldata, mean)   
+    
+    print(ag)
+    
+    plotmeans(Subjective.Value ~ Load,data=totaldata)
+    
+    png(filename=paste("./",graphdir,"/SubjectiveEyetrackingLoad-means.png",sep=""),width=1280,height=960)
+    print(plotmeans(Subjective.Value ~ Load,data=totaldata))
+    dev.off()
+
+    qplot(Load,Subjective.Value,data=totaldata,geom=c("point", "smooth", "jitter"))
+    
+    png(filename=paste("./",graphdir,"/SubjectiveEyetrackingLoad-means.png",sep=""),width=1280,height=960)
+    print(qplot(Load,Subjective.Value,data=totaldata,geom=c("point", "smooth", "jitter")))
+    dev.off()
+    
+    
 }
 
 msToHMS <- function(ms){
