@@ -458,6 +458,8 @@ compareSubjectiveEyetrackingLoad <- function(){
     
     }
     
+    #TODO: Maybe check values for inter-session relative load?
+    
 }
 
 msToHMS <- function(ms){
