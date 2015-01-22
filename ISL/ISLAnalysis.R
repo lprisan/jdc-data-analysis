@@ -2,6 +2,7 @@ require("ff")
 require("ggplot2")
 require("car")
 require("gplots")
+require("Hmisc")
 
 setwd("/home/lprisan/workspace/jdc-data-analysis-eyetrack/ISL")
 source("rollingWindows.R")
@@ -385,7 +386,21 @@ compareSubjectiveEyetrackingLoad <- function(){
     snippetData <- read.csv("TimesToExtractVideo-ISL.csv",sep=",")
     subjectiveData <- read.csv("StimulatedRecallData.csv",sep=",")
     
-    totaldata <- merge(snippetData,subjectiveData,by = c("Snippet"),all=T)
+    totaldata <- merge(snippetData,subjectiveData,by = c("Snippet","Session"),all=T)
+    
+    
+    snippetData2 <- read.csv("../DELANA/TimesToExtractVideo.csv",sep=",")
+    subjectiveData2 <- read.csv("../DELANA/StimulatedRecallData.csv",sep=",")
+    
+    totaldata2 <- merge(snippetData2,subjectiveData2,by = c("Snippet","Session"),all=T)
+    
+    totaldata <- rbind(totaldata,totaldata2)
+    
+    #Optional: what happens if we remove the mid-load part?
+    #totaldata <- totaldata[totaldata$Load!=2,]
+    
+    
+    print("Global subjective data analysis=======================================")
     
     ag <- aggregate(Subjective.Value ~ Load, data = totaldata, mean)   
     
@@ -397,12 +412,51 @@ compareSubjectiveEyetrackingLoad <- function(){
     print(plotmeans(Subjective.Value ~ Load,data=totaldata))
     dev.off()
 
-    qplot(Load,Subjective.Value,data=totaldata,geom=c("point", "smooth", "jitter"))
+    p <- qplot(Load,Subjective.Value,data=totaldata,geom=c("point"),size=4,alpha=0.4,position = position_jitter(w = 0.3, h = 0.3)) + stat_smooth(method = "lm")
+    print(p)
     
-    png(filename=paste("./",graphdir,"/SubjectiveEyetrackingLoad-means.png",sep=""),width=1280,height=960)
-    print(qplot(Load,Subjective.Value,data=totaldata,geom=c("point", "smooth", "jitter")))
+    png(filename=paste("./",graphdir,"/SubjectiveEyetrackingLoad-points.png",sep=""),width=1280,height=960)
+    print(p)
     dev.off()
+
+    # For the correlation
+    cordata <- as.matrix(totaldata[,c("Load","Subjective.Value")])
+    print("Correlation for global data:")
+    cor(cordata)
+    print(rcorr(cordata, type="pearson"))
     
+    print("Per subject subjective data analysis=======================================")
+    
+    totaldata$Subject <- as.factor(totaldata$Subject)
+    
+    for (subject in levels(totaldata$Subject)){
+        
+        subset <- totaldata[totaldata$Subject==subject,]
+        
+        ag <- aggregate(Subjective.Value ~ Load, data = subset, mean)   
+        
+        print(ag)
+        
+        plotmeans(Subjective.Value ~ Load,data=subset)
+        
+        png(filename=paste("./",graphdir,"/SubjectiveEyetrackingLoad-",subject,"-means.png",sep=""),width=1280,height=960)
+        print(plotmeans(Subjective.Value ~ Load,data=subset))
+        dev.off()
+        
+        p <- qplot(Load,Subjective.Value,data=subset,geom=c("point"),size=4,alpha=0.4,position = position_jitter(w = 0.3, h = 0.3)) + stat_smooth(method = "lm")
+        print(p)
+        
+        png(filename=paste("./",graphdir,"/SubjectiveEyetrackingLoad-",subject,"-points.png",sep=""),width=1280,height=960)
+        print(p)
+        dev.off()
+        
+        cordata <- as.matrix(subset[,c("Load","Subjective.Value")])
+        print(paste("Correlation for ",subject," data:"))
+        cor(cordata)
+        print(rcorr(cordata, type="pearson"))
+        
+    
+    }
     
 }
 
