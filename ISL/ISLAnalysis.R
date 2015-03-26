@@ -298,6 +298,7 @@ doVideoCodingAnalysis <- function(){
     totaldata$Large.Head.Movement <- factor(totaldata$Large.Head.Movement)
     print(tabCha <- table(totaldata$Load,totaldata$Large.Head.Movement))
     print(chisq.test(tabCha))
+    print(chisq.test(tabCha)$residuals)
     
     
     
