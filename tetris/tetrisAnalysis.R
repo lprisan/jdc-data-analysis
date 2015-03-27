@@ -143,6 +143,29 @@ eyetrackingPlots <- function(data){
     
 }
 
+singleGamePlots <- function(data){
+    
+    graphdir <- "graphs"
+    
+    for (i in unique(data$gameID)){
+
+        subdata <- totaldata[totaldata$gameID==i,]
+        
+        png(filename=paste("./",graphdir,"/Game-",i,"-LoadGraph.png",sep=""),width=1920,height=960)
+        p5 <- ggplot(subdata, aes(x=time, y=Load, col=Load)) + 
+            ggtitle(paste("Load Index, gameID=",i,sep="")) + 
+            geom_line(size=4) + #stat_smooth(method="loess",span=0.1) +
+            theme(axis.text.x = element_text(size=18),plot.title=element_text(size=20, face="bold"),axis.title=element_text(size=18),panel.background = element_rect(fill = 'white')) +
+            scale_color_gradient(low="green",high="red")
+        print(p5)
+        dev.off()
+        
+    }
+    
+    
+}
+
+
 morePlots <- function(data){
   
   dfc <- summarySE(data,measurevar="value.stackMean",groupvar="Load",na.rm=T)
