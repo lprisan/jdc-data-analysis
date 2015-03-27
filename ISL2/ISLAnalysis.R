@@ -4,7 +4,7 @@ require("car")
 require("gplots")
 require("Hmisc")
 
-setwd("/home/lprisan/workspace/jdc-data-analysis-eyetrack/ISL")
+setwd("/home/lprisan/workspace/jdc-data-analysis-eyetrack/ISL2")
 source("rollingWindows.R")
 #setwd("/data/tmpData")
 
@@ -13,8 +13,8 @@ source("rollingWindows.R")
 loadRawISLData <- function(){
 
     # List of available sessions (the data file names start with this)
-    sessions <- c("20141125_wendy_baseline1",
-                  "20141128_Wendy_baseline2")
+    sessions <- c("20150310_Wendy_Battleship1",
+                  "20150313_Wendy_Battleship2")
     
     rawdir <- "rawdata"
     
@@ -56,10 +56,13 @@ loadRawISLData <- function(){
 }
 
 # Does the rolling window load analysis, with a window and slide of 10s and 5s (by default)
+
+# There was a problem in the calibration, and saccade speed does not seem reliable/complete (sp. in session 2) -- we calculate the load based on the other 3 measures
 doLoadAnalyses <- function(window=10,slide=5){
     # List of available sessions (the data file names start with this)
-    sessions <- c("20141125_wendy_baseline1",
-                  "20141128_Wendy_baseline2")
+    sessions <- c("20150310_Wendy_Battleship1",
+                  "20150313_Wendy_Battleship2")
+    
     
     rawdir <- "rawdata"
     cleandir <- "cleandata"
@@ -90,23 +93,25 @@ doLoadAnalyses <- function(window=10,slide=5){
         longdata$above <- as.numeric(longdata$value > longFixMedian)
         
         # We get the saccade speed in the window
-        sacspdata <- rollingMean(sacdata$Time.ms,sacdata$Saccade.Speed,window*1000,slide*1000,inittime=0)
-        sacSpMedian <- median(sacspdata$value)
-        sacspdata$above <- as.numeric(sacspdata$value > sacSpMedian)
+        #sacspdata <- rollingMean(sacdata$Time.ms,sacdata$Saccade.Speed,window*1000,slide*1000,inittime=0)
+        #sacSpMedian <- median(sacspdata$value, na.rm = T)
+        #sacspdata$above <- as.numeric(sacspdata$value > sacSpMedian)
         
         totaldata <- merge(meandata,sddata,by="time",suffixes = c(".Mean",".SD"),all=T)
         totaldata <- merge(totaldata,longdata,by="time",all=T)
         names(totaldata)[[6]] <- paste(names(totaldata)[[6]],"Fix",sep=".")
         names(totaldata)[[7]] <- paste(names(totaldata)[[7]],"Fix",sep=".")
-        totaldata <- merge(totaldata,sacspdata,by="time",all=T)
-        names(totaldata)[[8]] <- paste(names(totaldata)[[8]],"Sac",sep=".")
-        names(totaldata)[[9]] <- paste(names(totaldata)[[9]],"Sac",sep=".")
+        #totaldata <- merge(totaldata,sacspdata,by="time",all=T)
+        #names(totaldata)[[8]] <- paste(names(totaldata)[[8]],"Sac",sep=".")
+        #names(totaldata)[[9]] <- paste(names(totaldata)[[9]],"Sac",sep=".")
         
-        totaldata$Load <- totaldata$above.Mean + totaldata$above.SD + totaldata$above.Fix + totaldata$above.Sac
+        totaldata$Load <- totaldata$above.Mean + totaldata$above.SD + totaldata$above.Fix #+ totaldata$above.Sac
         totaldata$Session <- rep(session,nrow(totaldata))
         
         # We save all the (clean) window data in a file, for later use
-        save(totaldata,meanPDmedian,sdPDmedian,longFixMedian,sacSpMedian,window,slide,
+        #save(totaldata,meanPDmedian,sdPDmedian,longFixMedian,sacSpMedian,window,slide,
+        #     file=paste("./",cleandir,"/",session,"-LoadMetrics.Rda",sep=""))
+        save(totaldata,meanPDmedian,sdPDmedian,longFixMedian,window,slide,
              file=paste("./",cleandir,"/",session,"-LoadMetrics.Rda",sep=""))
         
     }
@@ -117,8 +122,8 @@ doLoadAnalyses <- function(window=10,slide=5){
 
 extractExtremeLoadMoments <- function(){
 
-    sessions <- c("20141125_wendy_baseline1",
-                  "20141128_Wendy_baseline2")
+    sessions <- c("20150310_Wendy_Battleship1",
+                  "20150313_Wendy_Battleship2")
     
     cleandir <- "cleandata"
     
@@ -169,8 +174,8 @@ msToMinSec <- function(millis){
 plotLoadGraphs <- function(){
     
     # List of available sessions (the data file names start with this)
-    sessions <- c("20141125_wendy_baseline1",
-                  "20141128_Wendy_baseline2")
+    sessions <- c("20150310_Wendy_Battleship1",
+                  "20150313_Wendy_Battleship2")
     
     rawdir <- "rawdata"
     cleandir <- "cleandata"
@@ -187,38 +192,41 @@ plotLoadGraphs <- function(){
         print(qplot(totaldata$Load, binwidth=1,main=paste("Load Indexes for ",session,sep="")))
         dev.off()
         
-#         p1 <- ggplot(totaldata, aes(x=time, y=value.Mean)) + 
-#             ggtitle(paste("Pupil diameter MEAN over ",window,"s",sep="")) + 
-#             geom_line() + geom_hline(yintercept=meanPDmedian) +
-#             theme(axis.text.x = element_blank(),plot.title=element_text(size=20),axis.title=element_text(size=18))
-#         print(p1)
-#         
-#         p2 <- ggplot(totaldata, aes(x=time, y=value.SD)) + 
-#             ggtitle(paste("Pupil diameter SD over ",window,"s",sep="")) + 
-#             geom_line() + geom_hline(yintercept=sdPDmedian) +
-#             theme(axis.text.x = element_blank(),plot.title=element_text(size=20),axis.title=element_text(size=18))
-#         print(p2)
-#         
-#         p3 <- ggplot(totaldata, aes(x=time, y=value.Fix)) + 
-#             ggtitle(paste("Fixations >500ms over ",window,"s",sep="")) + 
-#             geom_line() + geom_hline(yintercept=longFixMedian) +
-#             theme(axis.text.x = element_blank(),plot.title=element_text(size=20),axis.title=element_text(size=18))
-#         print(p3)
-#         
-#         p4 <- ggplot(totaldata, aes(x=time, y=value.Sac)) + 
-#             ggtitle(paste("Saccade speed over ",window,"s",sep="")) + 
-#             geom_line() + geom_hline(yintercept=sacSpMedian) +
-#             theme(axis.text.x = element_blank(),plot.title=element_text(size=20),axis.title=element_text(size=18))
-#         print(p4)
+        p1 <- ggplot(totaldata, aes(x=time, y=value.Mean)) + 
+            ggtitle(paste("Pupil diameter MEAN over ",window,"s",sep="")) + 
+            geom_line() + geom_hline(yintercept=meanPDmedian) +
+            theme(axis.text.x = element_blank(),plot.title=element_text(size=20),axis.title=element_text(size=18))
+        #print(p1)
         
-        png(filename=paste("./",graphdir,"/",session,"-LoadGraph.png",sep=""),width=1920,height=960)
+        p2 <- ggplot(totaldata, aes(x=time, y=value.SD)) + 
+            ggtitle(paste("Pupil diameter SD over ",window,"s",sep="")) + 
+            geom_line() + geom_hline(yintercept=sdPDmedian) +
+            theme(axis.text.x = element_blank(),plot.title=element_text(size=20),axis.title=element_text(size=18))
+        #print(p2)
+        
+        p3 <- ggplot(totaldata, aes(x=time, y=value.Fix)) + 
+            ggtitle(paste("Fixations >500ms over ",window,"s",sep="")) + 
+            geom_line() + geom_hline(yintercept=longFixMedian) +
+            theme(axis.text.x = element_blank(),plot.title=element_text(size=20),axis.title=element_text(size=18))
+        #print(p3)
+        
+        #p4 <- ggplot(totaldata, aes(x=time, y=value.Sac)) + 
+        #    ggtitle(paste("Saccade speed over ",window,"s",sep="")) + 
+        #    geom_line() + geom_hline(yintercept=sacSpMedian) +
+        #    theme(axis.text.x = element_blank(),plot.title=element_text(size=20),axis.title=element_text(size=18)) + scale_y_continuous(limits = c(0, 2))
+        #print(p4)
+        
         p5 <- ggplot(totaldata, aes(x=time, y=Load, col=Load)) + 
             ggtitle(paste("Load Index\n(estimation of cognitive overload over ",window,"s)\n",session,sep="")) + 
             geom_line(size=1) + stat_smooth(method="loess",span=0.1) +
             theme(axis.text.x = element_text(size=18),plot.title=element_text(size=20, face="bold"),axis.title=element_text(size=18),panel.background = element_rect(fill = 'white')) +
             scale_color_gradient(low="green",high="red")
-        print(p5)
+        #print(p5)
+        png(filename=paste("./",graphdir,"/",session,"-LoadGraph.png",sep=""),width=1280,height=960)
+        #multiplot(p1, p2, p3, p4, p5, cols=1)
+        multiplot(p1, p2, p3, p5, cols=1)
         dev.off()
+        
         
         #We can see how correlated these four measurements are to each other:
         print(paste("Correlations for session",session))
@@ -231,8 +239,9 @@ plotLoadGraphs <- function(){
             
         }
 
-        print(cor(totaldata[,c("above.Mean","above.SD","above.Fix","above.Sac")]))
-
+        #print(cor(totaldata[,c("above.Mean","above.SD","above.Fix","above.Sac")]))
+        print(cor(totaldata[,c("above.Mean","above.SD","above.Fix")]))
+        
         if(nrow(overalldata)==0) overalldata <- totaldata
         else overalldata <- rbind(overalldata,totaldata)
     }
@@ -357,7 +366,7 @@ generateExtractVideoSnippets <- function(videoDir = ".",window=10){
         startTime <- Window.Center - (window/2)*1000
         endTime <- Window.Center + (window/2)*1000
         
-        originalFile <- paste(snippetData$Session[[i]],"-video.avi",sep="")
+        originalFile <- paste(snippetData$Session[[i]],"-videoexport.avi",sep="")
         #print(paste("Processing video... ",originalFile))
         #if(!file.exists(originalFile)){
         #    print("Missing video!")
@@ -474,4 +483,50 @@ msToHMS <- function(ms){
     S <- formatC(S, width = 2, format = "d", flag = "0")
     
     paste(H,M,S,sep=":")
+}
+
+# Multiple plot function, from http://www.cookbook-r.com/Graphs/Multiple_graphs_on_one_page_(ggplot2)/
+#
+# ggplot objects can be passed in ..., or to plotlist (as a list of ggplot objects)
+# - cols:   Number of columns in layout
+# - layout: A matrix specifying the layout. If present, 'cols' is ignored.
+#
+# If the layout is something like matrix(c(1,2,3,3), nrow=2, byrow=TRUE),
+# then plot 1 will go in the upper left, 2 will go in the upper right, and
+# 3 will go all the way across the bottom.
+#
+multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
+    require(grid)
+    
+    # Make a list from the ... arguments and plotlist
+    plots <- c(list(...), plotlist)
+    
+    numPlots = length(plots)
+    
+    # If layout is NULL, then use 'cols' to determine layout
+    if (is.null(layout)) {
+        # Make the panel
+        # ncol: Number of columns of plots
+        # nrow: Number of rows needed, calculated from # of cols
+        layout <- matrix(seq(1, cols * ceiling(numPlots/cols)),
+                         ncol = cols, nrow = ceiling(numPlots/cols))
+    }
+    
+    if (numPlots==1) {
+        print(plots[[1]])
+        
+    } else {
+        # Set up the page
+        grid.newpage()
+        pushViewport(viewport(layout = grid.layout(nrow(layout), ncol(layout))))
+        
+        # Make each plot, in the correct location
+        for (i in 1:numPlots) {
+            # Get the i,j matrix positions of the regions that contain this subplot
+            matchidx <- as.data.frame(which(layout == i, arr.ind = TRUE))
+            
+            print(plots[[i]], vp = viewport(layout.pos.row = matchidx$row,
+                                            layout.pos.col = matchidx$col))
+        }
+    }
 }
